@@ -1,72 +1,115 @@
 {
   "438bb57f-a890-47dd-9f57-12b925185a2d": {
     "name": "回復薬(小)",
+    "type": "item",
+    "price": "10",
     "commands": [
       {
         "commands": "薬効回復マクロ",
-        "command_id": "7d02fffc-7644-44d1-bc1d-668911928612"
+        "command_id": "7d02fffc-7644-44d1-bc1d-668911928612",
+        "arg1": "30",
+        "arg2": "20",
+        "arg3": null
       }
-    ],
-    "": []
+    ]
   },
   "c93d8110-ec81-439f-a649-dab53740498d": {
     "name": "鉄の剣",
+    "type": "weapon",
+    "price": "1000",
     "commands": [
       {
         "commands": "単純攻撃マクロ",
-        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89"
+        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "arg1": "10",
+        "arg2": null,
+        "arg3": null
       }
-    ],
-    "": []
+    ]
   },
   "4ffe0ea4-8e19-46e5-9bab-2f41244d083a": {
     "name": "疾風の剣",
+    "type": "weapon",
+    "price": "28000",
     "commands": [
       {
         "commands": "複数回攻撃ルール設定",
-        "command_id": "d9d76f5b-a9a5-4493-aae6-a93126fdf8bd"
+        "command_id": "d9d76f5b-a9a5-4493-aae6-a93126fdf8bd",
+        "arg1": "3",
+        "arg2": null,
+        "arg3": null
+      },
+      {
+        "commands": "単純攻撃マクロ",
+        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "arg1": "8",
+        "arg2": null,
+        "arg3": null
       }
-    ],
-    "": []
+    ]
   },
   "73e37231-90c3-4c2d-8ded-a87348a1b14d": {
     "name": "回復魔法(小)",
+    "type": "magic",
+    "price": "0",
     "commands": [
       {
         "commands": "魔法回復マクロ",
-        "command_id": "7ff17d2f-8895-4e0e-977d-36f6c0aa5383"
+        "command_id": "7ff17d2f-8895-4e0e-977d-36f6c0aa5383",
+        "arg1": "3",
+        "arg2": "30",
+        "arg3": "20"
       }
-    ],
-    "": []
+    ]
   },
   "390cbc7e-60d8-401f-986f-3c2bb8ae4a27": {
     "name": "炎を吐くLv3",
+    "type": "action",
+    "price": "0",
     "commands": [
       {
         "commands": "攻撃属性「火」設定",
-        "command_id": "9a46d8c2-6e5d-4330-9cc7-00c3e042a863"
+        "command_id": "9a46d8c2-6e5d-4330-9cc7-00c3e042a863",
+        "arg1": null,
+        "arg2": null,
+        "arg3": null
+      },
+      {
+        "commands": "全体攻撃マクロ",
+        "command_id": "844cfc52-36c9-4d3f-870b-040ebdccb15b",
+        "arg1": "50",
+        "arg2": "30"
       }
-    ],
-    "": []
+    ]
   },
   "e92f19ae-79ae-46ed-8b2c-0439b5554075": {
     "name": "様子を見ている",
+    "type": "action",
+    "price": "0",
     "commands": [
       {
         "commands": "メッセージ表示",
-        "command_id": "d2c69c4c-a333-432a-9b93-192457ea2b56"
+        "command_id": "d2c69c4c-a333-432a-9b93-192457ea2b56",
+        "arg1": "2d691c38-724f-47fd-838d-2178c982cd68"
       }
-    ],
-    "": []
+    ]
   },
   "6da093f9-2768-44fc-926a-64e5eb5f2efe": {
     "name": "魔王の2回攻撃",
+    "type": "action",
+    "price": "0",
     "commands": [
       {
         "commands": "複数回攻撃ルール設定",
-        "command_id": "d9d76f5b-a9a5-4493-aae6-a93126fdf8bd"
+        "command_id": "d9d76f5b-a9a5-4493-aae6-a93126fdf8bd",
+        "arg1": "2"
+      },
+      {
+        "commands": "単純攻撃マクロ",
+        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "arg1": "30",
+        "arg2": "30"
       }
-    ],
-    "": []
+    ]
   }
 }

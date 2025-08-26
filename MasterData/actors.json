@@ -1,85 +1,127 @@
 {
   "eabb2ec4-5636-4219-95f9-25530cfa35be": {
     "name": "勇者",
-    "": [
-      {
-        "": "TRUE"
-      }
-    ],
+    "is_enemy": "FALSE",
+    "hp": "100",
+    "mp": "50",
+    "attack": "40",
+    "deffence": "10",
+    "agility": "10",
     "inventories": [
       {
         "inventories": "疾風の剣",
-        "inventory_id": "4ffe0ea4-8e19-46e5-9bab-2f41244d083a"
+        "inventory_id": "4ffe0ea4-8e19-46e5-9bab-2f41244d083a",
+        "quantity": "1",
+        "equipped": "TRUE"
+      },
+      {
+        "inventories": "回復薬(小)",
+        "inventory_id": "438bb57f-a890-47dd-9f57-12b925185a2d",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
   "84378b29-c4ee-4479-b0c8-235e3f472a4d": {
     "name": "戦士",
-    "": [
-      {
-        "": "TRUE"
-      }
-    ],
+    "is_enemy": "FALSE",
+    "hp": "120",
+    "mp": "0",
+    "attack": "50",
+    "deffence": "10",
+    "agility": "8",
     "inventories": [
       {
         "inventories": "鉄の剣",
-        "inventory_id": "c93d8110-ec81-439f-a649-dab53740498d"
+        "inventory_id": "c93d8110-ec81-439f-a649-dab53740498d",
+        "quantity": "1",
+        "equipped": "TRUE"
+      },
+      {
+        "inventories": "回復薬(小)",
+        "inventory_id": "438bb57f-a890-47dd-9f57-12b925185a2d",
+        "quantity": "3",
+        "equipped": "FALSE"
       }
     ]
   },
   "7e030959-f1b2-44a0-a5f3-e5121390e838": {
     "name": "僧侶",
-    "": [
-      {
-        "": "FALSE"
-      }
-    ],
+    "is_enemy": "FALSE",
+    "hp": "80",
+    "mp": "100",
+    "attack": "10",
+    "deffence": "10",
+    "agility": "6",
     "inventories": [
       {
         "inventories": "回復魔法(小)",
-        "inventory_id": "73e37231-90c3-4c2d-8ded-a87348a1b14d"
+        "inventory_id": "73e37231-90c3-4c2d-8ded-a87348a1b14d",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
   "7c009e11-d37b-4195-b3c9-0ea8ae493730": {
     "name": "ドラゴン",
-    "": [
-      {
-        "": "FALSE"
-      }
-    ],
+    "is_enemy": "TRUE",
+    "hp": "400",
+    "mp": "0",
+    "attack": "30",
+    "deffence": "20",
+    "agility": "10",
     "inventories": [
       {
         "inventories": "炎を吐くLv3",
-        "inventory_id": "390cbc7e-60d8-401f-986f-3c2bb8ae4a27"
+        "inventory_id": "390cbc7e-60d8-401f-986f-3c2bb8ae4a27",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
   "1a21d68a-c66b-47f5-a508-45c0c87b10d5": {
     "name": "魔王",
-    "": [
-      {
-        "": "FALSE"
-      }
-    ],
+    "is_enemy": "TRUE",
+    "hp": "800",
+    "mp": "30",
+    "attack": "30",
+    "deffence": "10",
+    "agility": "8",
     "inventories": [
       {
         "inventories": "様子を見ている",
-        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075"
+        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
+        "quantity": "1",
+        "equipped": "FALSE"
+      },
+      {
+        "inventories": "魔王の2回攻撃",
+        "inventory_id": "6da093f9-2768-44fc-926a-64e5eb5f2efe",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
   "78e5714a-db3b-489d-b6b0-6cb3f1f67ed0": {
     "name": "魔神官",
-    "": [
-      {
-        "": "FALSE"
-      }
-    ],
+    "is_enemy": "TRUE",
+    "hp": "200",
+    "mp": "9",
+    "attack": "10",
+    "deffence": "10",
+    "agility": "6",
     "inventories": [
       {
         "inventories": "様子を見ている",
-        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075"
+        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
+        "quantity": "1",
+        "equipped": "FALSE"
+      },
+      {
+        "inventories": "回復魔法(小)",
+        "inventory_id": "73e37231-90c3-4c2d-8ded-a87348a1b14d",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   }
