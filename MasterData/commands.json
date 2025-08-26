@@ -1,139 +1,139 @@
-﻿{
-  "bbe7b3a3-e873-4548-a545-985abbcec6e7": {
+{
+  "2d7789cf-e8ab-40be-a99b-eef9d824dbf4": {
     "name": "定数加算",
     "sub_commands": []
   },
-  "82facf6b-819b-4dcd-afb9-d4d7a41d9aa1": {
+  "f30647ff-eedb-4c2b-bc43-0f2883055961": {
     "name": "定数乗算",
     "sub_commands": []
   },
-  "dd28b430-a4d9-43e3-bae5-5963feaf2e47": {
+  "98cefa6c-a925-4f5b-95b3-90962ac31d42": {
     "name": "乱数加算",
     "sub_commands": []
   },
-  "cb711680-c869-4efd-92ab-3f724aaa019e": {
+  "34e0a3a6-641a-4602-9f93-3eadfcaa5df8": {
     "name": "攻撃点ルール適用",
     "sub_commands": []
   },
-  "e8572cd3-346e-4bd8-80b9-1b8344332b49": {
+  "d9d76f5b-a9a5-4493-aae6-a93126fdf8bd": {
     "name": "複数回攻撃ルール設定",
     "sub_commands": []
   },
-  "e0279cdb-f5c1-4a86-afe5-e15abc2a40dd": {
+  "23ca1336-358d-461b-8e74-20beebe59f98": {
     "name": "全体攻撃ルール設定",
     "sub_commands": []
   },
-  "8cad7b21-fc6f-4383-90a0-51718c9d704f": {
+  "9a46d8c2-6e5d-4330-9cc7-00c3e042a863": {
     "name": "攻撃属性「火」設定",
     "sub_commands": []
   },
-  "3931ad34-ff3f-477c-8ca0-3dba4cd3ea21": {
+  "7519e60f-4e6b-4470-a47e-3c369819f900": {
     "name": "MP評価",
     "sub_commands": []
   },
-  "e74b25ce-ec83-4ec4-bbe5-2b2c924456cb": {
+  "ec62a0e2-a713-40d6-8d99-749a755c6cd3": {
     "name": "消費型アイテム評価",
     "sub_commands": []
   },
-  "5d59d94a-3d7f-4e1a-b586-5ecae4ed7ab5": {
+  "5dcdb9c0-28a3-4bc4-9325-3f141d600091": {
     "name": "魔法回復ルール適用",
     "sub_commands": []
   },
-  "769271cc-f1d2-40cb-bdc2-aa3d2f959832": {
+  "493bcef4-e7db-4261-91dc-f4fe8b35c88d": {
     "name": "薬草回復ルール適用",
     "sub_commands": []
   },
-  "555a5992-e90a-4a0e-9ecf-a7279e929270": {
+  "d2c69c4c-a333-432a-9b93-192457ea2b56": {
     "name": "メッセージ表示",
     "sub_commands": []
   },
-  "63e9c4d2-983e-480c-aaad-402ffbb5d1cf": {
+  "7ff17d2f-8895-4e0e-977d-36f6c0aa5383": {
     "name": "魔法回復マクロ",
     "sub_commands": [
       {
         "sub_commands": "MP評価",
         "arg": "arg1",
-        "command_id": "3931ad34-ff3f-477c-8ca0-3dba4cd3ea21"
+        "command_id": "7519e60f-4e6b-4470-a47e-3c369819f900"
       },
       {
         "sub_commands": "定数加算",
         "arg": "arg2",
-        "command_id": "bbe7b3a3-e873-4548-a545-985abbcec6e7"
+        "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
       },
       {
         "sub_commands": "乱数加算",
         "arg": "arg3",
-        "command_id": "dd28b430-a4d9-43e3-bae5-5963feaf2e47"
+        "command_id": "98cefa6c-a925-4f5b-95b3-90962ac31d42"
       },
       {
         "sub_commands": "魔法回復ルール適用",
         "arg": null,
-        "command_id": "5d59d94a-3d7f-4e1a-b586-5ecae4ed7ab5"
+        "command_id": "5dcdb9c0-28a3-4bc4-9325-3f141d600091"
       }
     ]
   },
-  "e1af9cd8-d20e-4597-8f59-58d7ca8d7a1b": {
+  "7d02fffc-7644-44d1-bc1d-668911928612": {
     "name": "薬効回復マクロ",
     "sub_commands": [
       {
         "sub_commands": "消費型アイテム評価",
         "arg": "1",
-        "command_id": "e74b25ce-ec83-4ec4-bbe5-2b2c924456cb"
+        "command_id": "ec62a0e2-a713-40d6-8d99-749a755c6cd3"
       },
       {
         "sub_commands": "定数加算",
         "arg": "arg1",
-        "command_id": "bbe7b3a3-e873-4548-a545-985abbcec6e7"
+        "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
       },
       {
         "sub_commands": "乱数加算",
         "arg": "arg2",
-        "command_id": "dd28b430-a4d9-43e3-bae5-5963feaf2e47"
+        "command_id": "98cefa6c-a925-4f5b-95b3-90962ac31d42"
       },
       {
         "sub_commands": "薬草回復ルール適用",
         "arg": null,
-        "command_id": "769271cc-f1d2-40cb-bdc2-aa3d2f959832"
+        "command_id": "493bcef4-e7db-4261-91dc-f4fe8b35c88d"
       }
     ]
   },
-  "568eb6ba-9fbf-43b7-a061-cd4627a7c41c": {
+  "1c189a49-f917-41b3-9d31-445f88c17c89": {
     "name": "単純攻撃マクロ",
     "sub_commands": [
       {
         "sub_commands": "定数加算",
         "arg": "arg1",
-        "command_id": "bbe7b3a3-e873-4548-a545-985abbcec6e7"
+        "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
       },
       {
         "sub_commands": "攻撃点ルール適用",
         "arg": null,
-        "command_id": "cb711680-c869-4efd-92ab-3f724aaa019e"
+        "command_id": "34e0a3a6-641a-4602-9f93-3eadfcaa5df8"
       }
     ]
   },
-  "1024ea7f-3fd0-4aba-ae5e-192d5d28e858": {
+  "844cfc52-36c9-4d3f-870b-040ebdccb15b": {
     "name": "全体攻撃マクロ",
     "sub_commands": [
       {
         "sub_commands": "定数加算",
         "arg": "arg1",
-        "command_id": "bbe7b3a3-e873-4548-a545-985abbcec6e7"
+        "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
       },
       {
         "sub_commands": "乱数加算",
         "arg": "arg2",
-        "command_id": "dd28b430-a4d9-43e3-bae5-5963feaf2e47"
+        "command_id": "98cefa6c-a925-4f5b-95b3-90962ac31d42"
       },
       {
         "sub_commands": "全体攻撃ルール設定",
         "arg": null,
-        "command_id": "e0279cdb-f5c1-4a86-afe5-e15abc2a40dd"
+        "command_id": "23ca1336-358d-461b-8e74-20beebe59f98"
       },
       {
         "sub_commands": "攻撃点ルール適用",
         "arg": null,
-        "command_id": "cb711680-c869-4efd-92ab-3f724aaa019e"
+        "command_id": "34e0a3a6-641a-4602-9f93-3eadfcaa5df8"
       }
     ]
   }
