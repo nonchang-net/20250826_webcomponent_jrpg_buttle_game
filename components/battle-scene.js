@@ -7,6 +7,7 @@ class BattleScene extends HTMLElement {
     constructor() {
         super();
         this.actors = {};
+        this.inventories = {};
         this.playerParty = [];
         this.enemyParty = [];
         this.enemyDisplay = null;
@@ -18,24 +19,30 @@ class BattleScene extends HTMLElement {
 
     /**
      * 初期化処理
-     * MasterDataからアクターデータを読み込み、バトル画面を構築する
+     * MasterDataからアクターデータとインベントリデータを読み込み、バトル画面を構築する
      */
     async init() {
-        await this.loadActors();
+        await this.loadMasterData();
         this.setupBattleField();
         this.render();
     }
 
     /**
-     * アクターデータを読み込む
+     * マスターデータを読み込む
+     * アクターデータとインベントリデータを並行読み込みする
      */
-    async loadActors() {
+    async loadMasterData() {
         try {
-            const response = await fetch('./MasterData/actors.json');
-            this.actors = await response.json();
+            const [actorsResponse, inventoriesResponse] = await Promise.all([
+                fetch('./MasterData/actors.json'),
+                fetch('./MasterData/inventories.json')
+            ]);
+            
+            this.actors = await actorsResponse.json();
+            this.inventories = await inventoriesResponse.json();
             this.setupParties();
         } catch (error) {
-            console.error('アクターデータの読み込みに失敗しました:', error);
+            console.error('マスターデータの読み込みに失敗しました:', error);
         }
     }
 
@@ -55,6 +62,59 @@ class BattleScene extends HTMLElement {
                 this.enemyParty.push(actorWithId);
             }
         });
+    }
+
+    /**
+     * プレイヤーパーティが使用可能な道具を取得する
+     * @returns {Array} 道具の配列
+     */
+    getAvailableItems() {
+        const items = [];
+        
+        // プレイヤーパーティの全メンバーのインベントリをチェック
+        this.playerParty.forEach(member => {
+            if (member.inventories && Array.isArray(member.inventories)) {
+                member.inventories.forEach(inventory => {
+                    const inventoryData = this.inventories[inventory.inventory_id];
+                    if (inventoryData && (inventoryData.type === 'item' || inventoryData.type === 'weapon')) {
+                        items.push({
+                            id: inventory.inventory_id,
+                            name: inventoryData.name,
+                            quantity: 1 // TODO: 実際の数量管理が必要な場合は実装
+                        });
+                    }
+                });
+            }
+        });
+        
+        return items;
+    }
+
+    /**
+     * プレイヤーパーティが使用可能な魔法を取得する
+     * @returns {Array} 魔法の配列
+     */
+    getAvailableMagic() {
+        const spells = [];
+        
+        // プレイヤーパーティの全メンバーのインベントリをチェック
+        this.playerParty.forEach(member => {
+            if (member.inventories && Array.isArray(member.inventories)) {
+                member.inventories.forEach(inventory => {
+                    const inventoryData = this.inventories[inventory.inventory_id];
+                    if (inventoryData && inventoryData.type === 'magic') {
+                        spells.push({
+                            id: inventory.inventory_id,
+                            name: inventoryData.name,
+                            mpCost: 5, // TODO: マスターデータに追加が必要
+                            availableMp: 50 // TODO: キャラクターの実際のMPを参照
+                        });
+                    }
+                });
+            }
+        });
+        
+        return spells;
     }
 
     /**
@@ -186,21 +246,14 @@ class BattleScene extends HTMLElement {
                 break;
             case 'magic':
                 console.log('魔法を選択しました');
-                // サンプル魔法データ（実際はMasterDataから取得）
-                const spells = [
-                    { id: 'heal', name: '回復魔法(小)', mpCost: 5, availableMp: 50 },
-                    { id: 'fire', name: '炎の魔法', mpCost: 8, availableMp: 50 },
-                    { id: 'thunder', name: '雷の魔法', mpCost: 12, availableMp: 50 }
-                ];
+                // マスターデータから魔法を取得
+                const spells = this.getAvailableMagic();
                 this.commandMenu.showMagicMenu(spells);
                 break;
             case 'item':
                 console.log('道具を選択しました');
-                // サンプルアイテムデータ（実際はMasterDataから取得）
-                const items = [
-                    { id: 'potion', name: '回復薬', quantity: 3 },
-                    { id: 'mana', name: 'マナポーション', quantity: 1 }
-                ];
+                // マスターデータから道具を取得
+                const items = this.getAvailableItems();
                 this.commandMenu.showItemMenu(items);
                 break;
         }
