@@ -164,13 +164,28 @@ class BattleScene extends HTMLElement {
      */
     handleCommand(command) {
         switch(command) {
-            case 'attack':
-                console.log('こうげきを選択しました');
+            case 'fight':
+                console.log('戦うを選択しました');
                 this.messageDisplay.showBattleEvent('turn', { character: '勇者' });
                 this.commandMenu.showTargetSelection();
+                // 実際の攻撃処理（デモ用）
+                setTimeout(() => {
+                    this.performAttack();
+                    this.commandMenu.showMainMenu();
+                    this.commandMenu.resetSelection();
+                }, 1000);
+                break;
+            case 'defend':
+                console.log('防御を選択しました');
+                this.messageDisplay.addMessage('勇者は身を守っている！');
+                // 防御効果を適用（実装は後で）
+                setTimeout(() => {
+                    this.commandMenu.showMainMenu();
+                    this.commandMenu.resetSelection();
+                }, 1000);
                 break;
             case 'magic':
-                console.log('じゅもんを選択しました');
+                console.log('魔法を選択しました');
                 // サンプル魔法データ（実際はMasterDataから取得）
                 const spells = [
                     { id: 'heal', name: '回復魔法(小)', mpCost: 5, availableMp: 50 },
@@ -180,17 +195,13 @@ class BattleScene extends HTMLElement {
                 this.commandMenu.showMagicMenu(spells);
                 break;
             case 'item':
-                console.log('どうぐを選択しました');
+                console.log('道具を選択しました');
                 // サンプルアイテムデータ（実際はMasterDataから取得）
                 const items = [
                     { id: 'potion', name: '回復薬', quantity: 3 },
                     { id: 'mana', name: 'マナポーション', quantity: 1 }
                 ];
                 this.commandMenu.showItemMenu(items);
-                break;
-            case 'escape':
-                console.log('にげるを選択しました');
-                this.messageDisplay.showBattleEvent('escape');
                 break;
         }
     }

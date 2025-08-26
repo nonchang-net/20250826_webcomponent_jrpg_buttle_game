@@ -6,13 +6,15 @@ class CommandMenu extends HTMLElement {
     constructor() {
         super();
         this.currentMode = 'main'; // 'main', 'target', 'item', 'magic'
+        this.selectedIndex = 0;
         this.commands = [
-            { id: 'attack', label: 'こうげき', enabled: true },
-            { id: 'magic', label: 'じゅもん', enabled: true },
-            { id: 'item', label: 'どうぐ', enabled: true },
-            { id: 'escape', label: 'にげる', enabled: true }
+            { id: 'fight', label: '戦う', enabled: true },
+            { id: 'defend', label: '防御', enabled: true },
+            { id: 'magic', label: '魔法', enabled: true },
+            { id: 'item', label: '道具', enabled: true }
         ];
         this.setupComponent();
+        this.setupKeyboardControls();
     }
 
     /**
@@ -42,9 +44,9 @@ class CommandMenu extends HTMLElement {
                 }
 
                 .command-grid {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 10px;
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
                     flex: 1;
                 }
 
@@ -59,16 +61,32 @@ class CommandMenu extends HTMLElement {
                     background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
                     border: 2px solid #666;
                     color: white;
-                    font-size: 14px;
+                    font-size: 16px;
                     font-weight: bold;
                     border-radius: 8px;
                     cursor: pointer;
                     transition: all 0.2s ease;
                     display: flex;
                     align-items: center;
-                    justify-content: center;
-                    padding: 10px;
-                    min-height: 40px;
+                    justify-content: flex-start;
+                    padding: 12px 20px;
+                    min-height: 45px;
+                    position: relative;
+                }
+
+                .command-button.selected {
+                    background: linear-gradient(145deg, #FFD700, #FFA000);
+                    border-color: #FFD700;
+                    color: #000;
+                    transform: translateX(10px);
+                }
+
+                .command-button.selected::before {
+                    content: '▶';
+                    position: absolute;
+                    left: -15px;
+                    color: #FFD700;
+                    font-size: 14px;
                 }
 
                 .command-button:hover:not(:disabled) {
@@ -184,15 +202,22 @@ class CommandMenu extends HTMLElement {
         const commandGrid = document.createElement('div');
         commandGrid.className = 'command-grid';
         
-        this.commands.forEach(command => {
+        this.commands.forEach((command, index) => {
             const button = document.createElement('button');
             button.className = 'command-button';
             button.dataset.command = command.id;
+            button.dataset.index = index;
             button.textContent = command.label;
             button.disabled = !command.enabled;
             
+            if (index === this.selectedIndex) {
+                button.classList.add('selected');
+            }
+            
             button.addEventListener('click', () => {
                 if (command.enabled) {
+                    this.selectedIndex = index;
+                    this.updateSelection();
                     this.handleCommand(command.id);
                 }
             });
@@ -426,6 +451,85 @@ class CommandMenu extends HTMLElement {
             detail: { spellId: spellId },
             bubbles: true
         }));
+    }
+
+    /**
+     * キーボード操作を設定する
+     */
+    setupKeyboardControls() {
+        document.addEventListener('keydown', (event) => {
+            // メインメニュー時のみキー操作を有効にする
+            if (this.currentMode !== 'main') return;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    event.preventDefault();
+                    this.moveSelection(-1);
+                    break;
+                case 'ArrowDown':
+                    event.preventDefault();
+                    this.moveSelection(1);
+                    break;
+                case 'Enter':
+                case ' ':
+                    event.preventDefault();
+                    this.executeSelectedCommand();
+                    break;
+                case 'Escape':
+                    event.preventDefault();
+                    if (this.currentMode !== 'main') {
+                        this.showMainMenu();
+                    }
+                    break;
+            }
+        });
+    }
+
+    /**
+     * 選択を移動する
+     * @param {number} direction - 移動方向（-1: 上, 1: 下）
+     */
+    moveSelection(direction) {
+        const enabledCommands = this.commands.filter(cmd => cmd.enabled);
+        const currentEnabledIndex = enabledCommands.findIndex(cmd => 
+            cmd === this.commands[this.selectedIndex]
+        );
+        
+        if (enabledCommands.length === 0) return;
+        
+        const newEnabledIndex = (currentEnabledIndex + direction + enabledCommands.length) % enabledCommands.length;
+        const newCommand = enabledCommands[newEnabledIndex];
+        this.selectedIndex = this.commands.findIndex(cmd => cmd === newCommand);
+        
+        this.updateSelection();
+    }
+
+    /**
+     * 選択状態を更新する
+     */
+    updateSelection() {
+        const buttons = this.querySelectorAll('.command-button');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('selected', index === this.selectedIndex);
+        });
+    }
+
+    /**
+     * 選択されたコマンドを実行する
+     */
+    executeSelectedCommand() {
+        const selectedCommand = this.commands[this.selectedIndex];
+        if (selectedCommand && selectedCommand.enabled) {
+            this.handleCommand(selectedCommand.id);
+        }
+    }
+
+    /**
+     * 選択インデックスをリセットする
+     */
+    resetSelection() {
+        this.selectedIndex = 0;
+        this.updateSelection();
     }
 }
 
