@@ -377,6 +377,33 @@ class CommandMenu extends HTMLElement {
     }
 
     /**
+     * 再プレイメニューを表示する
+     */
+    showReplayMenu() {
+        this.currentMode = 'replay';
+        const titleElement = this.querySelector('#menu-title');
+        const contentElement = this.querySelector('#menu-content');
+        
+        titleElement.textContent = '勝負終了';
+        
+        const commandList = document.createElement('div');
+        commandList.className = 'command-list';
+        
+        // 再プレイボタン
+        const replayButton = document.createElement('button');
+        replayButton.className = 'command-button selected';
+        replayButton.textContent = '再プレイ';
+        replayButton.addEventListener('click', () => {
+            this.handleReplay();
+        });
+        
+        commandList.appendChild(replayButton);
+        
+        contentElement.innerHTML = '';
+        contentElement.appendChild(commandList);
+    }
+
+    /**
      * コマンドの有効/無効を設定する
      * @param {string} commandId - コマンドID
      * @param {boolean} enabled - 有効かどうか
@@ -449,6 +476,16 @@ class CommandMenu extends HTMLElement {
     useMagic(spellId) {
         this.dispatchEvent(new CustomEvent('magic-selected', {
             detail: { spellId: spellId },
+            bubbles: true
+        }));
+    }
+
+    /**
+     * 再プレイ処理（親から呼ばれるメソッド）
+     */
+    handleReplay() {
+        this.dispatchEvent(new CustomEvent('replay-selected', {
+            detail: {},
             bubbles: true
         }));
     }

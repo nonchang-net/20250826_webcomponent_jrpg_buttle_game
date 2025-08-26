@@ -2,6 +2,7 @@
  * JRPGバトルシーンコンポーネント
  * ドラゴンクエスト風のバトル画面を提供する
  * 分割されたコンポーネント（enemy-display, party-status, command-menu）を統合管理する
+ * battle-scene-display.jsによりUI表示機能を分離し、このクラスはモジュール統合の役割を担う
  */
 class BattleScene extends HTMLElement {
     constructor() {
@@ -10,10 +11,8 @@ class BattleScene extends HTMLElement {
         this.inventories = {};
         this.playerParty = [];
         this.enemyParty = [];
-        this.enemyDisplay = null;
-        this.partyStatus = null;
-        this.commandMenu = null;
-        this.messageDisplay = null;
+        this.battleFlowController = null;
+        this.display = null;
         this.init();
     }
 
@@ -23,8 +22,17 @@ class BattleScene extends HTMLElement {
      */
     async init() {
         await this.loadMasterData();
+        this.initializeDisplay();
         this.setupBattleField();
         this.render();
+        this.initializeBattleFlow();
+    }
+
+    /**
+     * 表示管理クラスを初期化する
+     */
+    initializeDisplay() {
+        this.display = new BattleSceneDisplay(this);
     }
 
     /**
@@ -121,56 +129,11 @@ class BattleScene extends HTMLElement {
      * バトルフィールドの設定
      */
     setupBattleField() {
-        this.innerHTML = `
-            <style>
-                :host {
-                    display: block;
-                    width: 100vw;
-                    height: 100vh;
-                    background: linear-gradient(180deg, #2B4C8C 0%, #1A2F5C 50%, #0F1929 100%);
-                    position: relative;
-                    font-family: 'MS UI Gothic', 'Hiragino Kaku Gothic Pro', sans-serif;
-                }
-
-                .battle-field {
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    flex-direction: column;
-                }
-
-                .enemy-area {
-                    flex: 1;
-                }
-
-                .ui-area {
-                    height: 250px;
-                    background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%);
-                    border-top: 3px solid #FFD700;
-                    display: flex;
-                    position: relative;
-                }
-            </style>
-            
-            <div class="battle-field">
-                <div class="enemy-area">
-                    <enemy-display id="enemy-display"></enemy-display>
-                </div>
-                
-                <div class="ui-area">
-                    <party-status id="party-status"></party-status>
-                    <command-menu id="command-menu"></command-menu>
-                </div>
-                
-                <message-display id="message-display"></message-display>
-            </div>
-        `;
+        // 表示管理クラスからHTML構造を取得
+        this.innerHTML = this.display.setupBattleFieldHTML();
         
-        // 子コンポーネントの参照を取得
-        this.enemyDisplay = this.querySelector('#enemy-display');
-        this.partyStatus = this.querySelector('#party-status');
-        this.commandMenu = this.querySelector('#command-menu');
-        this.messageDisplay = this.querySelector('#message-display');
+        // 子コンポーネントの参照を表示管理クラスで初期化
+        this.display.initializeComponentReferences(this);
         
         // イベントリスナーを設定
         this.setupEventListeners();
@@ -180,13 +143,53 @@ class BattleScene extends HTMLElement {
      * 画面を描画する
      */
     render() {
-        if (this.enemyDisplay) {
-            this.enemyDisplay.setEnemies(this.enemyParty);
-        }
-        if (this.partyStatus) {
-            this.partyStatus.setPartyMembers(this.playerParty);
+        if (this.display) {
+            this.display.render(this.playerParty, this.enemyParty);
         }
     }
+
+    /**
+     * バトルフローコントローラーを初期化する
+     */
+    initializeBattleFlow() {
+        // BattleFlowControllerを初期化
+        this.battleFlowController = new BattleFlowController(
+            this.actors,
+            this.inventories,
+            this.playerParty,
+            this.enemyParty
+        );
+
+        // メッセージコールバックを設定
+        this.battleFlowController.setMessageCallback((message) => {
+            if (this.display && this.display.messageDisplay) {
+                this.display.messageDisplay.addMessage(message);
+            }
+        });
+
+        // UI更新コールバックを設定
+        this.battleFlowController.setUIUpdateCallback((type, data) => {
+            if (this.display) {
+                this.display.handleBattleUIUpdate(type, data, this.playerParty, this.enemyParty);
+            }
+        });
+
+        // キーボードイベントリスナーを追加（Escキー対応）
+        document.addEventListener('keydown', (event) => {
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                if (this.battleFlowController.cancelLastAction()) {
+                    console.log('前の行動がキャンセルされました');
+                }
+            }
+        });
+
+        // バトル開始
+        setTimeout(() => {
+            this.battleFlowController.startBattle('turn_based');
+        }, 1000);
+    }
+
 
     /**
      * イベントリスナーを設定する
@@ -199,7 +202,13 @@ class BattleScene extends HTMLElement {
         
         // 敵選択イベント
         this.addEventListener('enemy-selected', (event) => {
-            console.log('敵が選択されました:', event.detail.enemy.name);
+            const selectedEnemy = event.detail.enemy;
+            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            
+            if (this.battleFlowController && currentPlayer) {
+                // 攻撃行動をBattleFlowControllerに設定
+                this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedEnemy);
+            }
         });
         
         // パーティメンバー選択イベント
@@ -209,12 +218,32 @@ class BattleScene extends HTMLElement {
         
         // アイテム選択イベント
         this.addEventListener('item-selected', (event) => {
-            console.log('アイテムが選択されました:', event.detail.itemId);
+            const itemId = event.detail.itemId;
+            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            
+            if (this.battleFlowController && currentPlayer) {
+                // アイテム使用行動をBattleFlowControllerに設定
+                this.battleFlowController.setPlayerAction(currentPlayer, 'item', currentPlayer, { itemId: itemId });
+            }
         });
         
         // 魔法選択イベント
         this.addEventListener('magic-selected', (event) => {
-            console.log('魔法が選択されました:', event.detail.spellId);
+            const spellId = event.detail.spellId;
+            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            
+            if (this.battleFlowController && currentPlayer) {
+                // 魔法行動をBattleFlowControllerに設定
+                this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
+            }
+        });
+
+        // 再プレイ選択イベント
+        this.addEventListener('replay-selected', (event) => {
+            if (this.battleFlowController) {
+                // バトルを再開始
+                this.battleFlowController.restartBattle();
+            }
         });
     }
 
@@ -223,38 +252,45 @@ class BattleScene extends HTMLElement {
      * @param {string} command - 実行するコマンド
      */
     handleCommand(command) {
+        if (!this.battleFlowController) {
+            console.error('BattleFlowController is not initialized');
+            return;
+        }
+
+        // 現在のプレイヤー（勇者）を取得
+        const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+        if (!currentPlayer) {
+            console.error('No current player found');
+            return;
+        }
+
         switch(command) {
             case 'fight':
-                console.log('戦うを選択しました');
-                this.messageDisplay.showBattleEvent('turn', { character: '勇者' });
-                this.commandMenu.showTargetSelection();
-                // 実際の攻撃処理（デモ用）
-                setTimeout(() => {
-                    this.performAttack();
-                    this.commandMenu.showMainMenu();
-                    this.commandMenu.resetSelection();
-                }, 1000);
+                // ターゲット選択画面を表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.commandMenu.showTargetSelection();
+                }
                 break;
+                
             case 'defend':
-                console.log('防御を選択しました');
-                this.messageDisplay.addMessage('勇者は身を守っている！');
-                // 防御効果を適用（実装は後で）
-                setTimeout(() => {
-                    this.commandMenu.showMainMenu();
-                    this.commandMenu.resetSelection();
-                }, 1000);
+                // 防御行動をBattleFlowControllerに設定
+                this.battleFlowController.setPlayerAction(currentPlayer, 'defend', currentPlayer);
                 break;
+                
             case 'magic':
-                console.log('魔法を選択しました');
-                // マスターデータから魔法を取得
-                const spells = this.getAvailableMagic();
-                this.commandMenu.showMagicMenu(spells);
+                // 利用可能な魔法を取得して表示
+                const spells = this.battleFlowController.getAvailableMagic(currentPlayer);
+                if (this.display && this.display.commandMenu) {
+                    this.display.commandMenu.showMagicMenu(spells);
+                }
                 break;
+                
             case 'item':
-                console.log('道具を選択しました');
-                // マスターデータから道具を取得
-                const items = this.getAvailableItems();
-                this.commandMenu.showItemMenu(items);
+                // 利用可能なアイテムを取得して表示
+                const items = this.battleFlowController.getAvailableItems(currentPlayer);
+                if (this.display && this.display.commandMenu) {
+                    this.display.commandMenu.showItemMenu(items);
+                }
                 break;
         }
     }
@@ -263,28 +299,8 @@ class BattleScene extends HTMLElement {
      * 攻撃アクションを実行する
      */
     performAttack() {
-        // 最初の敵にダメージ演出
-        if (this.enemyParty.length > 0 && this.enemyDisplay) {
-            this.enemyDisplay.playDamageAnimation(0);
-            
-            // 攻撃メッセージを表示
-            this.messageDisplay.showBattleEvent('attack', {
-                attacker: '勇者',
-                target: this.enemyParty[0].name,
-                damage: 30
-            });
-            
-            // サンプルダメージ処理
-            setTimeout(() => {
-                const currentHp = parseInt(this.enemyParty[0].currentHp || this.enemyParty[0].hp);
-                const newHp = Math.max(0, currentHp - 30);
-                this.enemyDisplay.updateEnemyHp(0, newHp);
-                
-                // 敵が倒れた場合のメッセージ
-                if (newHp <= 0) {
-                    this.messageDisplay.addMessage(`${this.enemyParty[0].name}を倒した！`);
-                }
-            }, 250);
+        if (this.display) {
+            this.display.performAttackAnimation(this.enemyParty);
         }
     }
 }
