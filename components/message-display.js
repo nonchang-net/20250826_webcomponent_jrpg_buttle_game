@@ -9,6 +9,7 @@ class MessageDisplay extends HTMLElement {
         this.messageQueue = [];
         this.isDisplaying = false;
         this.textSpeed = 50; // ミリ秒間隔でテキスト表示
+        this.currentTypewriterInterval = null;
         this.setupComponent();
         this.initializeWithDefaultMessage();
     }
@@ -119,22 +120,22 @@ class MessageDisplay extends HTMLElement {
         `;
 
         // クリックで次のメッセージへ
-        this.addEventListener('click', () => {
+        this.addEventListener('click', async () => {
             if (this.isDisplaying) {
                 this.skipCurrentMessage();
             } else {
-                this.showNextMessage();
+                await this.showNextMessage();
             }
         });
 
         // スペースキーでも次のメッセージへ
-        document.addEventListener('keydown', (event) => {
+        document.addEventListener('keydown', async (event) => {
             if (event.code === 'Space' || event.code === 'Enter') {
                 event.preventDefault();
                 if (this.isDisplaying) {
                     this.skipCurrentMessage();
                 } else {
-                    this.showNextMessage();
+                    await this.showNextMessage();
                 }
             }
         });
@@ -143,56 +144,67 @@ class MessageDisplay extends HTMLElement {
     /**
      * デフォルトメッセージで初期化
      */
-    initializeWithDefaultMessage() {
+    async initializeWithDefaultMessage() {
         // システムメッセージの定数定義
         const SYSTEM_MESSAGES = {
-            BATTLE_START: '魔物の群れが現れた！ コマンド？'
+            // BATTLE_START: 'battletest ver 20250826.2254'
+            BATTLE_START: 'test'
         };
         
-        this.showMessage(SYSTEM_MESSAGES.BATTLE_START);
+        await this.showMessage(SYSTEM_MESSAGES.BATTLE_START);
     }
 
     /**
      * メッセージを表示する
      * @param {string} message - 表示するメッセージ
      * @param {boolean} immediate - 即座に表示するかどうか
+     * @returns {Promise} - 表示完了を示すPromise
      */
-    showMessage(message, immediate = false) {
+    async showMessage(message, immediate = false) {
         if (immediate) {
             this.displayMessageImmediate(message);
+            return Promise.resolve();
         } else {
-            this.displayMessageWithTypewriter(message);
+            return this.displayMessageWithTypewriter(message);
         }
     }
 
     /**
      * タイプライター効果でメッセージを表示
      * @param {string} message - 表示するメッセージ
+     * @returns {Promise} - 表示完了を示すPromise
      */
     displayMessageWithTypewriter(message) {
-        const messageElement = this.querySelector('#message-content');
-        const continueIndicator = this.querySelector('#continue-indicator');
-        
-        this.currentMessage = message;
-        this.isDisplaying = true;
-        continueIndicator.classList.remove('show');
-        
-        let currentIndex = 0;
-        messageElement.innerHTML = '';
-        
-        const typewriterInterval = setInterval(() => {
-            if (currentIndex < message.length) {
-                messageElement.textContent += message.charAt(currentIndex);
-                currentIndex++;
-            } else {
-                clearInterval(typewriterInterval);
-                this.isDisplaying = false;
-                continueIndicator.classList.add('show');
-            }
-        }, this.textSpeed);
-        
-        // 現在のインターバルを保存（スキップ用）
-        this.currentTypewriterInterval = typewriterInterval;
+        return new Promise((resolve) => {
+            const messageElement = this.querySelector('#message-content');
+            const continueIndicator = this.querySelector('#continue-indicator');
+            
+            this.currentMessage = message;
+            this.isDisplaying = true;
+            continueIndicator.classList.remove('show');
+            
+            let currentIndex = 0;
+            messageElement.innerHTML = '';
+            
+            const typewriterInterval = setInterval(() => {
+                if (currentIndex < message.length) {
+                    messageElement.textContent += message.charAt(currentIndex);
+                    currentIndex++;
+                } else {
+                    clearInterval(typewriterInterval);
+                    this.isDisplaying = false;
+                    this.currentTypewriterInterval = null;
+                    continueIndicator.classList.add('show');
+                    resolve(); // タイプライター完了を通知
+                }
+            }, this.textSpeed);
+            
+            // 現在のインターバルを保存（スキップ用）
+            this.currentTypewriterInterval = typewriterInterval;
+            
+            // スキップ時のPromise解決処理を保存
+            this.currentTypewriterResolve = resolve;
+        });
     }
 
     /**
@@ -219,26 +231,45 @@ class MessageDisplay extends HTMLElement {
         }
         
         this.displayMessageImmediate(this.currentMessage);
+        
+        // スキップ時もPromiseを解決
+        if (this.currentTypewriterResolve) {
+            this.currentTypewriterResolve();
+            this.currentTypewriterResolve = null;
+        }
     }
 
     /**
      * メッセージキューに追加
      * @param {string} message - 追加するメッセージ
+     * @returns {Promise} - メッセージ表示完了を示すPromise
      */
-    addMessage(message) {
+    async addMessage(message) {
         this.messageQueue.push(message);
+        
+        // 現在表示中でなく、このメッセージが最初のものなら即座に処理開始
         if (!this.isDisplaying && this.messageQueue.length === 1) {
-            this.showNextMessage();
+            await this.processMessageQueue();
         }
     }
 
     /**
-     * 次のメッセージを表示
+     * メッセージキューを処理する
      */
-    showNextMessage() {
+    async processMessageQueue() {
+        while (this.messageQueue.length > 0 && !this.isDisplaying) {
+            const nextMessage = this.messageQueue.shift();
+            await this.showMessage(nextMessage);
+        }
+    }
+
+    /**
+     * 次のメッセージを表示（手動操作用）
+     */
+    async showNextMessage() {
         if (this.messageQueue.length > 0) {
             const nextMessage = this.messageQueue.shift();
-            this.showMessage(nextMessage);
+            await this.showMessage(nextMessage);
         }
     }
 
@@ -251,6 +282,11 @@ class MessageDisplay extends HTMLElement {
             clearInterval(this.currentTypewriterInterval);
             this.currentTypewriterInterval = null;
         }
+        if (this.currentTypewriterResolve) {
+            this.currentTypewriterResolve();
+            this.currentTypewriterResolve = null;
+        }
+        this.isDisplaying = false;
     }
 
     /**
