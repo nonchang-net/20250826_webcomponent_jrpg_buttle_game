@@ -1,6 +1,7 @@
 /**
  * JRPGバトルシーンコンポーネント
  * ドラゴンクエスト風のバトル画面を提供する
+ * 分割されたコンポーネント（enemy-display, party-status, command-menu）を統合管理する
  */
 class BattleScene extends HTMLElement {
     constructor() {
@@ -8,6 +9,9 @@ class BattleScene extends HTMLElement {
         this.actors = {};
         this.playerParty = [];
         this.enemyParty = [];
+        this.enemyDisplay = null;
+        this.partyStatus = null;
+        this.commandMenu = null;
         this.init();
     }
 
@@ -76,39 +80,6 @@ class BattleScene extends HTMLElement {
 
                 .enemy-area {
                     flex: 1;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 50px;
-                }
-
-                .enemy-container {
-                    display: flex;
-                    flex-wrap: wrap;
-                    gap: 30px;
-                    justify-content: center;
-                }
-
-                .enemy {
-                    background: rgba(255, 255, 255, 0.1);
-                    border: 2px solid #FFD700;
-                    border-radius: 10px;
-                    padding: 20px;
-                    color: white;
-                    text-align: center;
-                    min-width: 120px;
-                    backdrop-filter: blur(5px);
-                }
-
-                .enemy-name {
-                    font-size: 18px;
-                    font-weight: bold;
-                    margin-bottom: 10px;
-                }
-
-                .enemy-hp {
-                    font-size: 14px;
-                    color: #90EE90;
                 }
 
                 .ui-area {
@@ -118,199 +89,68 @@ class BattleScene extends HTMLElement {
                     display: flex;
                     position: relative;
                 }
-
-                .party-status {
-                    flex: 2;
-                    padding: 20px;
-                    display: flex;
-                    flex-direction: column;
-                    gap: 15px;
-                }
-
-                .party-member {
-                    display: flex;
-                    justify-content: space-between;
-                    align-items: center;
-                    background: rgba(255, 255, 255, 0.1);
-                    padding: 8px 15px;
-                    border-radius: 5px;
-                    color: white;
-                    border-left: 4px solid #4CAF50;
-                }
-
-                .member-name {
-                    font-weight: bold;
-                    min-width: 80px;
-                }
-
-                .member-stats {
-                    display: flex;
-                    gap: 20px;
-                    font-size: 14px;
-                }
-
-                .stat {
-                    display: flex;
-                    align-items: center;
-                    gap: 5px;
-                }
-
-                .hp-bar, .mp-bar {
-                    width: 60px;
-                    height: 8px;
-                    background: rgba(0,0,0,0.5);
-                    border-radius: 4px;
-                    overflow: hidden;
-                    border: 1px solid #666;
-                }
-
-                .hp-fill {
-                    height: 100%;
-                    background: linear-gradient(90deg, #FF6B6B, #4CAF50);
-                    transition: width 0.3s ease;
-                }
-
-                .mp-fill {
-                    height: 100%;
-                    background: linear-gradient(90deg, #3498DB, #2196F3);
-                    transition: width 0.3s ease;
-                }
-
-                .command-area {
-                    flex: 1;
-                    padding: 20px;
-                    background: rgba(0,0,0,0.3);
-                    border-left: 2px solid #444;
-                }
-
-                .command-menu {
-                    display: grid;
-                    grid-template-columns: 1fr 1fr;
-                    gap: 10px;
-                    height: 100%;
-                }
-
-                .command-button {
-                    background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
-                    border: 2px solid #666;
-                    color: white;
-                    font-size: 16px;
-                    font-weight: bold;
-                    border-radius: 8px;
-                    cursor: pointer;
-                    transition: all 0.2s ease;
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                }
-
-                .command-button:hover {
-                    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
-                    border-color: #FFD700;
-                    transform: translateY(-2px);
-                }
-
-                .command-button:active {
-                    transform: translateY(0);
-                }
-
-                @keyframes damage {
-                    0% { transform: translateX(0); }
-                    25% { transform: translateX(-5px); }
-                    75% { transform: translateX(5px); }
-                    100% { transform: translateX(0); }
-                }
-
-                .damage-animation {
-                    animation: damage 0.5s ease-in-out;
-                }
             </style>
             
             <div class="battle-field">
                 <div class="enemy-area">
-                    <div class="enemy-container" id="enemy-container">
-                        <!-- 敵キャラクターがここに表示される -->
-                    </div>
+                    <enemy-display id="enemy-display"></enemy-display>
                 </div>
                 
                 <div class="ui-area">
-                    <div class="party-status" id="party-status">
-                        <!-- パーティメンバーのステータスがここに表示される -->
-                    </div>
-                    
-                    <div class="command-area">
-                        <div class="command-menu">
-                            <button class="command-button" onclick="this.getRootNode().host.handleCommand('attack')">こうげき</button>
-                            <button class="command-button" onclick="this.getRootNode().host.handleCommand('magic')">じゅもん</button>
-                            <button class="command-button" onclick="this.getRootNode().host.handleCommand('item')">どうぐ</button>
-                            <button class="command-button" onclick="this.getRootNode().host.handleCommand('escape')">にげる</button>
-                        </div>
-                    </div>
+                    <party-status id="party-status"></party-status>
+                    <command-menu id="command-menu"></command-menu>
                 </div>
             </div>
         `;
+        
+        // 子コンポーネントの参照を取得
+        this.enemyDisplay = this.querySelector('#enemy-display');
+        this.partyStatus = this.querySelector('#party-status');
+        this.commandMenu = this.querySelector('#command-menu');
+        
+        // イベントリスナーを設定
+        this.setupEventListeners();
     }
 
     /**
      * 画面を描画する
      */
     render() {
-        this.renderEnemies();
-        this.renderPartyStatus();
+        if (this.enemyDisplay) {
+            this.enemyDisplay.setEnemies(this.enemyParty);
+        }
+        if (this.partyStatus) {
+            this.partyStatus.setPartyMembers(this.playerParty);
+        }
     }
 
     /**
-     * 敵キャラクターを描画する
+     * イベントリスナーを設定する
      */
-    renderEnemies() {
-        const container = this.querySelector('#enemy-container');
-        container.innerHTML = '';
-        
-        this.enemyParty.forEach(enemy => {
-            const enemyElement = document.createElement('div');
-            enemyElement.className = 'enemy';
-            enemyElement.innerHTML = `
-                <div class="enemy-name">${enemy.name}</div>
-                <div class="enemy-hp">HP: ${enemy.hp}</div>
-            `;
-            container.appendChild(enemyElement);
+    setupEventListeners() {
+        // コマンドメニューからのイベント
+        this.addEventListener('command-selected', (event) => {
+            this.handleCommand(event.detail.command);
         });
-    }
-
-    /**
-     * パーティステータスを描画する
-     */
-    renderPartyStatus() {
-        const container = this.querySelector('#party-status');
-        container.innerHTML = '';
         
-        this.playerParty.forEach(member => {
-            const memberElement = document.createElement('div');
-            memberElement.className = 'party-member';
-            
-            const hpPercentage = Math.floor((parseInt(member.hp) / parseInt(member.hp)) * 100);
-            const mpPercentage = Math.floor((parseInt(member.mp) / parseInt(member.mp)) * 100);
-            
-            memberElement.innerHTML = `
-                <div class="member-name">${member.name}</div>
-                <div class="member-stats">
-                    <div class="stat">
-                        <span>HP</span>
-                        <div class="hp-bar">
-                            <div class="hp-fill" style="width: ${hpPercentage}%"></div>
-                        </div>
-                        <span>${member.hp}</span>
-                    </div>
-                    <div class="stat">
-                        <span>MP</span>
-                        <div class="mp-bar">
-                            <div class="mp-fill" style="width: ${mpPercentage}%"></div>
-                        </div>
-                        <span>${member.mp}</span>
-                    </div>
-                </div>
-            `;
-            container.appendChild(memberElement);
+        // 敵選択イベント
+        this.addEventListener('enemy-selected', (event) => {
+            console.log('敵が選択されました:', event.detail.enemy.name);
+        });
+        
+        // パーティメンバー選択イベント
+        this.addEventListener('member-selected', (event) => {
+            console.log('パーティメンバーが選択されました:', event.detail.member.name);
+        });
+        
+        // アイテム選択イベント
+        this.addEventListener('item-selected', (event) => {
+            console.log('アイテムが選択されました:', event.detail.itemId);
+        });
+        
+        // 魔法選択イベント
+        this.addEventListener('magic-selected', (event) => {
+            console.log('魔法が選択されました:', event.detail.spellId);
         });
     }
 
@@ -322,13 +162,26 @@ class BattleScene extends HTMLElement {
         switch(command) {
             case 'attack':
                 console.log('こうげきを選択しました');
-                this.performAttack();
+                this.commandMenu.showTargetSelection();
                 break;
             case 'magic':
                 console.log('じゅもんを選択しました');
+                // サンプル魔法データ（実際はMasterDataから取得）
+                const spells = [
+                    { id: 'heal', name: '回復魔法(小)', mpCost: 5, availableMp: 50 },
+                    { id: 'fire', name: '炎の魔法', mpCost: 8, availableMp: 50 },
+                    { id: 'thunder', name: '雷の魔法', mpCost: 12, availableMp: 50 }
+                ];
+                this.commandMenu.showMagicMenu(spells);
                 break;
             case 'item':
                 console.log('どうぐを選択しました');
+                // サンプルアイテムデータ（実際はMasterDataから取得）
+                const items = [
+                    { id: 'potion', name: '回復薬', quantity: 3 },
+                    { id: 'mana', name: 'マナポーション', quantity: 1 }
+                ];
+                this.commandMenu.showItemMenu(items);
                 break;
             case 'escape':
                 console.log('にげるを選択しました');
@@ -340,15 +193,16 @@ class BattleScene extends HTMLElement {
      * 攻撃アクションを実行する
      */
     performAttack() {
-        // 簡単な攻撃演出
-        const enemies = this.querySelectorAll('.enemy');
-        if (enemies.length > 0) {
-            const targetEnemy = enemies[0];
-            targetEnemy.classList.add('damage-animation');
+        // 最初の敵にダメージ演出
+        if (this.enemyParty.length > 0 && this.enemyDisplay) {
+            this.enemyDisplay.playDamageAnimation(0);
             
+            // サンプルダメージ処理
             setTimeout(() => {
-                targetEnemy.classList.remove('damage-animation');
-            }, 500);
+                const currentHp = parseInt(this.enemyParty[0].currentHp || this.enemyParty[0].hp);
+                const newHp = Math.max(0, currentHp - 30);
+                this.enemyDisplay.updateEnemyHp(0, newHp);
+            }, 250);
         }
     }
 }
