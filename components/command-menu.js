@@ -180,18 +180,27 @@ class CommandMenu extends HTMLElement {
         
         titleElement.textContent = 'コマンド選択';
         
-        contentElement.innerHTML = `
-            <div class="command-grid">
-                ${this.commands.map(command => `
-                    <button class="command-button" 
-                            data-command="${command.id}"
-                            ${!command.enabled ? 'disabled' : ''}
-                            onclick="this.getRootNode().host.handleCommand('${command.id}')">
-                        ${command.label}
-                    </button>
-                `).join('')}
-            </div>
-        `;
+        const commandGrid = document.createElement('div');
+        commandGrid.className = 'command-grid';
+        
+        this.commands.forEach(command => {
+            const button = document.createElement('button');
+            button.className = 'command-button';
+            button.dataset.command = command.id;
+            button.textContent = command.label;
+            button.disabled = !command.enabled;
+            
+            button.addEventListener('click', () => {
+                if (command.enabled) {
+                    this.handleCommand(command.id);
+                }
+            });
+            
+            commandGrid.appendChild(button);
+        });
+        
+        contentElement.innerHTML = '';
+        contentElement.appendChild(commandGrid);
     }
 
     /**
@@ -204,16 +213,25 @@ class CommandMenu extends HTMLElement {
         
         titleElement.textContent = 'ターゲット選択';
         
-        contentElement.innerHTML = `
-            <div class="target-instruction">
-                攻撃対象を選択してください
-            </div>
-            <div class="command-list">
-                <button class="back-button command-button" onclick="this.getRootNode().host.showMainMenu()">
-                    戻る
-                </button>
-            </div>
-        `;
+        const instruction = document.createElement('div');
+        instruction.className = 'target-instruction';
+        instruction.textContent = '攻撃対象を選択してください';
+        
+        const commandList = document.createElement('div');
+        commandList.className = 'command-list';
+        
+        const backButton = document.createElement('button');
+        backButton.className = 'back-button command-button';
+        backButton.textContent = '戻る';
+        backButton.addEventListener('click', () => {
+            this.showMainMenu();
+        });
+        
+        commandList.appendChild(backButton);
+        
+        contentElement.innerHTML = '';
+        contentElement.appendChild(instruction);
+        contentElement.appendChild(commandList);
     }
 
     /**
@@ -227,25 +245,45 @@ class CommandMenu extends HTMLElement {
         
         titleElement.textContent = 'どうぐ選択';
         
-        const itemList = items.length > 0 ? items.map(item => `
-            <button class="item-button command-button" 
-                    data-item="${item.id}"
-                    onclick="this.getRootNode().host.useItem('${item.id}')">
-                ${item.name}
-                <span class="item-quantity">×${item.quantity}</span>
-            </button>
-        `).join('') : '<div style="color: #666; text-align: center; padding: 20px;">使用できるアイテムがありません</div>';
+        const commandList = document.createElement('div');
+        commandList.className = 'command-list';
         
-        contentElement.innerHTML = `
-            <div class="command-list">
-                <div class="item-list">
-                    ${itemList}
-                </div>
-                <button class="back-button command-button" onclick="this.getRootNode().host.showMainMenu()">
-                    戻る
-                </button>
-            </div>
-        `;
+        const itemListContainer = document.createElement('div');
+        itemListContainer.className = 'item-list';
+        
+        if (items.length > 0) {
+            items.forEach(item => {
+                const itemButton = document.createElement('button');
+                itemButton.className = 'item-button command-button';
+                itemButton.dataset.item = item.id;
+                itemButton.innerHTML = `
+                    ${item.name}
+                    <span class="item-quantity">×${item.quantity}</span>
+                `;
+                itemButton.addEventListener('click', () => {
+                    this.useItem(item.id);
+                });
+                itemListContainer.appendChild(itemButton);
+            });
+        } else {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.style.cssText = 'color: #666; text-align: center; padding: 20px;';
+            emptyMessage.textContent = '使用できるアイテムがありません';
+            itemListContainer.appendChild(emptyMessage);
+        }
+        
+        const backButton = document.createElement('button');
+        backButton.className = 'back-button command-button';
+        backButton.textContent = '戻る';
+        backButton.addEventListener('click', () => {
+            this.showMainMenu();
+        });
+        
+        commandList.appendChild(itemListContainer);
+        commandList.appendChild(backButton);
+        
+        contentElement.innerHTML = '';
+        contentElement.appendChild(commandList);
     }
 
     /**
@@ -259,26 +297,57 @@ class CommandMenu extends HTMLElement {
         
         titleElement.textContent = 'じゅもん選択';
         
-        const spellList = spells.length > 0 ? spells.map(spell => `
-            <button class="magic-button command-button" 
-                    data-spell="${spell.id}"
-                    ${spell.mpCost > spell.availableMp ? 'disabled' : ''}
-                    onclick="this.getRootNode().host.useMagic('${spell.id}')">
-                <span class="${spell.mpCost > spell.availableMp ? 'disabled-text' : ''}">${spell.name}</span>
-                <span class="mp-cost">MP${spell.mpCost}</span>
-            </button>
-        `).join('') : '<div style="color: #666; text-align: center; padding: 20px;">使用できる呪文がありません</div>';
+        const commandList = document.createElement('div');
+        commandList.className = 'command-list';
         
-        contentElement.innerHTML = `
-            <div class="command-list">
-                <div class="magic-list">
-                    ${spellList}
-                </div>
-                <button class="back-button command-button" onclick="this.getRootNode().host.showMainMenu()">
-                    戻る
-                </button>
-            </div>
-        `;
+        const magicListContainer = document.createElement('div');
+        magicListContainer.className = 'magic-list';
+        
+        if (spells.length > 0) {
+            spells.forEach(spell => {
+                const spellButton = document.createElement('button');
+                spellButton.className = 'magic-button command-button';
+                spellButton.dataset.spell = spell.id;
+                spellButton.disabled = spell.mpCost > spell.availableMp;
+                
+                const spellName = document.createElement('span');
+                spellName.className = spell.mpCost > spell.availableMp ? 'disabled-text' : '';
+                spellName.textContent = spell.name;
+                
+                const mpCost = document.createElement('span');
+                mpCost.className = 'mp-cost';
+                mpCost.textContent = `MP${spell.mpCost}`;
+                
+                spellButton.appendChild(spellName);
+                spellButton.appendChild(mpCost);
+                
+                spellButton.addEventListener('click', () => {
+                    if (spell.mpCost <= spell.availableMp) {
+                        this.useMagic(spell.id);
+                    }
+                });
+                
+                magicListContainer.appendChild(spellButton);
+            });
+        } else {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.style.cssText = 'color: #666; text-align: center; padding: 20px;';
+            emptyMessage.textContent = '使用できる呪文がありません';
+            magicListContainer.appendChild(emptyMessage);
+        }
+        
+        const backButton = document.createElement('button');
+        backButton.className = 'back-button command-button';
+        backButton.textContent = '戻る';
+        backButton.addEventListener('click', () => {
+            this.showMainMenu();
+        });
+        
+        commandList.appendChild(magicListContainer);
+        commandList.appendChild(backButton);
+        
+        contentElement.innerHTML = '';
+        contentElement.appendChild(commandList);
     }
 
     /**
