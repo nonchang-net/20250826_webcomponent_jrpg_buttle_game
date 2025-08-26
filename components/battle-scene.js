@@ -12,6 +12,7 @@ class BattleScene extends HTMLElement {
         this.enemyDisplay = null;
         this.partyStatus = null;
         this.commandMenu = null;
+        this.messageDisplay = null;
         this.init();
     }
 
@@ -83,7 +84,7 @@ class BattleScene extends HTMLElement {
                 }
 
                 .ui-area {
-                    height: 200px;
+                    height: 250px;
                     background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%);
                     border-top: 3px solid #FFD700;
                     display: flex;
@@ -100,6 +101,8 @@ class BattleScene extends HTMLElement {
                     <party-status id="party-status"></party-status>
                     <command-menu id="command-menu"></command-menu>
                 </div>
+                
+                <message-display id="message-display"></message-display>
             </div>
         `;
         
@@ -107,6 +110,7 @@ class BattleScene extends HTMLElement {
         this.enemyDisplay = this.querySelector('#enemy-display');
         this.partyStatus = this.querySelector('#party-status');
         this.commandMenu = this.querySelector('#command-menu');
+        this.messageDisplay = this.querySelector('#message-display');
         
         // イベントリスナーを設定
         this.setupEventListeners();
@@ -162,6 +166,7 @@ class BattleScene extends HTMLElement {
         switch(command) {
             case 'attack':
                 console.log('こうげきを選択しました');
+                this.messageDisplay.showBattleEvent('turn', { character: '勇者' });
                 this.commandMenu.showTargetSelection();
                 break;
             case 'magic':
@@ -185,6 +190,7 @@ class BattleScene extends HTMLElement {
                 break;
             case 'escape':
                 console.log('にげるを選択しました');
+                this.messageDisplay.showBattleEvent('escape');
                 break;
         }
     }
@@ -197,11 +203,23 @@ class BattleScene extends HTMLElement {
         if (this.enemyParty.length > 0 && this.enemyDisplay) {
             this.enemyDisplay.playDamageAnimation(0);
             
+            // 攻撃メッセージを表示
+            this.messageDisplay.showBattleEvent('attack', {
+                attacker: '勇者',
+                target: this.enemyParty[0].name,
+                damage: 30
+            });
+            
             // サンプルダメージ処理
             setTimeout(() => {
                 const currentHp = parseInt(this.enemyParty[0].currentHp || this.enemyParty[0].hp);
                 const newHp = Math.max(0, currentHp - 30);
                 this.enemyDisplay.updateEnemyHp(0, newHp);
+                
+                // 敵が倒れた場合のメッセージ
+                if (newHp <= 0) {
+                    this.messageDisplay.addMessage(`${this.enemyParty[0].name}を倒した！`);
+                }
             }, 250);
         }
     }

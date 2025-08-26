@@ -28,6 +28,7 @@ class EnemyDisplay extends HTMLElement {
                     flex-wrap: wrap;
                     gap: 30px;
                     justify-content: center;
+                    padding : 2em;
                 }
 
                 .enemy {

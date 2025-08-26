@@ -23,11 +23,12 @@ class CommandMenu extends HTMLElement {
             <style>
                 :host {
                     flex: 1;
-                    padding: 20px;
+                    padding: 15px;
                     background: rgba(0,0,0,0.3);
                     border-left: 2px solid #444;
                     display: flex;
                     flex-direction: column;
+                    min-width: 200px;
                 }
 
                 .menu-title {
@@ -58,7 +59,7 @@ class CommandMenu extends HTMLElement {
                     background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
                     border: 2px solid #666;
                     color: white;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
                     cursor: pointer;
@@ -66,8 +67,8 @@ class CommandMenu extends HTMLElement {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 12px;
-                    min-height: 45px;
+                    padding: 10px;
+                    min-height: 40px;
                 }
 
                 .command-button:hover:not(:disabled) {

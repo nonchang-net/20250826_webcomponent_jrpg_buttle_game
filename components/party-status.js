@@ -18,11 +18,12 @@ class PartyStatus extends HTMLElement {
             <style>
                 :host {
                     flex: 2;
-                    padding: 20px;
+                    padding: 15px;
                     display: flex;
                     flex-direction: column;
-                    gap: 15px;
+                    gap: 8px;
                     background: rgba(0,0,0,0.2);
+                    overflow-y: auto;
                 }
 
                 .party-member {
@@ -30,12 +31,15 @@ class PartyStatus extends HTMLElement {
                     justify-content: space-between;
                     align-items: center;
                     background: rgba(255, 255, 255, 0.1);
-                    padding: 8px 15px;
+                    padding: 6px 12px;
                     border-radius: 5px;
+                    margin : 10px;
                     color: white;
                     border-left: 4px solid #4CAF50;
                     cursor: pointer;
                     transition: all 0.3s ease;
+                    min-height: 60px;
+                    flex-shrink: 0;
                 }
 
                 .party-member:hover {
@@ -62,19 +66,19 @@ class PartyStatus extends HTMLElement {
 
                 .member-name {
                     font-weight: bold;
-                    min-width: 80px;
-                    font-size: 16px;
+                    min-width: 70px;
+                    font-size: 14px;
                 }
 
                 .member-level {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #FFD700;
                 }
 
                 .member-stats {
                     display: flex;
-                    gap: 20px;
-                    font-size: 14px;
+                    gap: 15px;
+                    font-size: 13px;
                 }
 
                 .stat {
@@ -89,10 +93,10 @@ class PartyStatus extends HTMLElement {
                 }
 
                 .hp-bar, .mp-bar {
-                    width: 60px;
-                    height: 8px;
+                    width: 50px;
+                    height: 6px;
                     background: rgba(0,0,0,0.5);
-                    border-radius: 4px;
+                    border-radius: 3px;
                     overflow: hidden;
                     border: 1px solid #666;
                     position: relative;
@@ -111,15 +115,15 @@ class PartyStatus extends HTMLElement {
                 }
 
                 .stat-value {
-                    font-size: 12px;
-                    min-width: 35px;
+                    font-size: 11px;
+                    min-width: 30px;
                     text-align: center;
                 }
 
                 .equipment-info {
-                    font-size: 11px;
+                    font-size: 10px;
                     color: #B0B0B0;
-                    margin-top: 3px;
+                    margin-top: 2px;
                 }
 
                 .status-effects {
