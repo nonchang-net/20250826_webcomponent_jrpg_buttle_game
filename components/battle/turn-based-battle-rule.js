@@ -190,13 +190,8 @@ class TurnBasedBattleRule extends BattleRuleBase {
      */
     executeNextAction() {
         if (this.currentTurnIndex >= this.turnOrder.length) {
-            // 全員の行動が完了
-            const battleResult = this.checkBattleResult();
-            if (battleResult) {
-                this.endBattle(battleResult);
-            } else {
-                this.startPlayerActionSelection();
-            }
+            // 全員の行動が完了、次のターンへ
+            this.startPlayerActionSelection();
             return;
         }
 
@@ -338,12 +333,8 @@ class TurnBasedBattleRule extends BattleRuleBase {
      */
     executeEnemyActions() {
         if (this.turnOrder.length === 0) {
-            const battleResult = this.checkBattleResult();
-            if (battleResult) {
-                this.endBattle(battleResult);
-            } else {
-                this.startPlayerActionSelection();
-            }
+            // 敵のターン終了、プレイヤーターンへ
+            this.startPlayerActionSelection();
             return;
         }
 

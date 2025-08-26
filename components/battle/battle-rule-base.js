@@ -89,13 +89,13 @@ class BattleRuleBase {
      * @param {Object} actor - アクター
      */
     initializeActorStats(actor) {
-        const actorData = this.actors[actor.actor_id];
+        const actorData = this.actors[actor.id];
         if (actorData) {
-            actor.maxHp = actorData.hp;
-            actor.currentHp = actorData.hp;
-            actor.maxMp = actorData.mp;
-            actor.currentMp = actorData.mp;
-            actor.agility = actorData.agility || 10;
+            actor.maxHp = parseInt(actorData.hp);
+            actor.currentHp = parseInt(actorData.hp);
+            actor.maxMp = parseInt(actorData.mp);
+            actor.currentMp = parseInt(actorData.mp);
+            actor.agility = parseInt(actorData.agility) || 10;
         }
     }
 
