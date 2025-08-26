@@ -65,54 +65,54 @@ class BattleScene extends HTMLElement {
     }
 
     /**
-     * プレイヤーパーティが使用可能な道具を取得する
+     * 現在のプレイヤー（勇者）が使用可能な道具を取得する
      * @returns {Array} 道具の配列
      */
     getAvailableItems() {
         const items = [];
         
-        // プレイヤーパーティの全メンバーのインベントリをチェック
-        this.playerParty.forEach(member => {
-            if (member.inventories && Array.isArray(member.inventories)) {
-                member.inventories.forEach(inventory => {
-                    const inventoryData = this.inventories[inventory.inventory_id];
-                    if (inventoryData && (inventoryData.type === 'item' || inventoryData.type === 'weapon')) {
-                        items.push({
-                            id: inventory.inventory_id,
-                            name: inventoryData.name,
-                            quantity: 1 // TODO: 実際の数量管理が必要な場合は実装
-                        });
-                    }
-                });
-            }
-        });
+        // 勇者のキャラクターを取得（プレイヤーパーティの最初のメンバーを勇者とする）
+        const hero = this.playerParty.find(member => member.name === '勇者') || this.playerParty[0];
+        
+        if (hero && hero.inventories && Array.isArray(hero.inventories)) {
+            hero.inventories.forEach(inventory => {
+                const inventoryData = this.inventories[inventory.inventory_id];
+                if (inventoryData && (inventoryData.type === 'item' || inventoryData.type === 'weapon')) {
+                    items.push({
+                        id: inventory.inventory_id,
+                        name: inventoryData.name,
+                        quantity: 1 // TODO: 実際の数量管理が必要な場合は実装
+                    });
+                }
+            });
+        }
         
         return items;
     }
 
     /**
-     * プレイヤーパーティが使用可能な魔法を取得する
+     * 現在のプレイヤー（勇者）が使用可能な魔法を取得する
      * @returns {Array} 魔法の配列
      */
     getAvailableMagic() {
         const spells = [];
         
-        // プレイヤーパーティの全メンバーのインベントリをチェック
-        this.playerParty.forEach(member => {
-            if (member.inventories && Array.isArray(member.inventories)) {
-                member.inventories.forEach(inventory => {
-                    const inventoryData = this.inventories[inventory.inventory_id];
-                    if (inventoryData && inventoryData.type === 'magic') {
-                        spells.push({
-                            id: inventory.inventory_id,
-                            name: inventoryData.name,
-                            mpCost: 5, // TODO: マスターデータに追加が必要
-                            availableMp: 50 // TODO: キャラクターの実際のMPを参照
-                        });
-                    }
-                });
-            }
-        });
+        // 勇者のキャラクターを取得（プレイヤーパーティの最初のメンバーを勇者とする）
+        const hero = this.playerParty.find(member => member.name === '勇者') || this.playerParty[0];
+        
+        if (hero && hero.inventories && Array.isArray(hero.inventories)) {
+            hero.inventories.forEach(inventory => {
+                const inventoryData = this.inventories[inventory.inventory_id];
+                if (inventoryData && inventoryData.type === 'magic') {
+                    spells.push({
+                        id: inventory.inventory_id,
+                        name: inventoryData.name,
+                        mpCost: 5, // TODO: マスターデータに追加が必要
+                        availableMp: 50 // TODO: キャラクターの実際のMPを参照
+                    });
+                }
+            });
+        }
         
         return spells;
     }

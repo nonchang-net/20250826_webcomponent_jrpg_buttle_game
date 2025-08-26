@@ -269,7 +269,7 @@ class CommandMenu extends HTMLElement {
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
-        titleElement.textContent = 'どうぐ選択';
+        titleElement.textContent = '道具選択';
         
         const commandList = document.createElement('div');
         commandList.className = 'command-list';
@@ -321,7 +321,7 @@ class CommandMenu extends HTMLElement {
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
-        titleElement.textContent = 'じゅもん選択';
+        titleElement.textContent = '魔法選択';
         
         const commandList = document.createElement('div');
         commandList.className = 'command-list';
