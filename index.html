@@ -16,10 +16,12 @@
 </head>
 <body>
     <battle-scene></battle-scene>
-    <script src="components/enemy-display.js"></script>
-    <script src="components/party-status.js"></script>
-    <script src="components/command-menu.js"></script>
-    <script src="components/message-display.js"></script>
+    <!-- UI コンポーネント -->
+    <script src="components/ui/enemy-display.js"></script>
+    <script src="components/ui/party-status.js"></script>
+    <script src="components/ui/command-menu.js"></script>
+    <script src="components/ui/message-display.js"></script>
+    <script src="components/ui/battle-scene-display.js"></script>
     <!-- バトルシステムクラス（依存関係順） -->
     <script src="components/battle/actor.js"></script>
     <script src="components/battle/battle-rule-base.js"></script>
@@ -27,7 +29,6 @@
     <script src="components/battle/action-resolver.js"></script>
     <script src="components/battle/turn-based-battle-rule.js"></script>
     <script src="components/battle/battle-flow-controller.js"></script>
-    <script src="components/battle-scene-display.js"></script>
     <script src="components/battle-scene.js"></script>
 </body>
 </html>

@@ -315,11 +315,11 @@ class ActionResolver {
 
     /**
      * 回復量を計算する
-     * @param {Object} caster - 術者
+     * @param {Object} _caster - 術者（将来拡張用）
      * @param {Object} spellData - 魔法データ
      * @returns {number} 回復量
      */
-    calculateHealAmount(caster, spellData) {
+    calculateHealAmount(_caster, spellData) {
         const baseHeal = spellData.name.includes('小') ? 25 : spellData.name.includes('大') ? 80 : 50;
         const random = Math.floor(Math.random() * 10) - 5; // -5から+4の乱数
         return Math.max(1, baseHeal + random);
@@ -327,12 +327,12 @@ class ActionResolver {
 
     /**
      * 魔法ダメージを計算する
-     * @param {Object} caster - 術者
-     * @param {Object} target - 対象
-     * @param {Object} spellData - 魔法データ
+     * @param {Object} _caster - 術者（将来拡張用）
+     * @param {Object} _target - 対象（将来拡張用）
+     * @param {Object} _spellData - 魔法データ（将来拡張用）
      * @returns {number} ダメージ量
      */
-    calculateMagicDamage(caster, target, spellData) {
+    calculateMagicDamage(_caster, _target, _spellData) {
         const baseDamage = 30;
         const random = Math.floor(Math.random() * 20); // 0-19の乱数
         return Math.max(1, baseDamage + random);
