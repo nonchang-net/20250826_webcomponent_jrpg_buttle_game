@@ -10,6 +10,8 @@ class BattleScene extends HTMLElement {
         this.actors = {};
         this.inventories = {};
         this.commands = {};
+        this.messages = {};
+        this.locale = 'ja'; // ロケール設定（将来的にオプション設定で変更可能）
         this.playerParty = [];
         this.enemyParty = [];
         this.battleFlowController = null;
@@ -38,19 +40,21 @@ class BattleScene extends HTMLElement {
 
     /**
      * マスターデータを読み込む
-     * アクターデータ、インベントリデータ、コマンドデータを並行読み込みする
+     * アクターデータ、インベントリデータ、コマンドデータ、メッセージデータを並行読み込みする
      */
     async loadMasterData() {
         try {
-            const [actorsResponse, inventoriesResponse, commandsResponse] = await Promise.all([
+            const [actorsResponse, inventoriesResponse, commandsResponse, messagesResponse] = await Promise.all([
                 fetch('./MasterData/actors.json'),
                 fetch('./MasterData/inventories.json'),
-                fetch('./MasterData/commands.json')
+                fetch('./MasterData/commands.json'),
+                fetch('./MasterData/messages.json')
             ]);
             
             this.actors = await actorsResponse.json();
             this.inventories = await inventoriesResponse.json();
             this.commands = await commandsResponse.json();
+            this.messages = await messagesResponse.json();
             this.setupParties();
         } catch (error) {
             console.error('マスターデータの読み込みに失敗しました:', error);
@@ -110,6 +114,8 @@ class BattleScene extends HTMLElement {
             this.actors,
             this.inventories,
             this.commands,
+            this.messages,
+            this.locale,
             this.playerParty,
             this.enemyParty
         );

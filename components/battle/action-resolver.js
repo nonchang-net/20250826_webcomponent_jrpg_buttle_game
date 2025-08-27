@@ -3,12 +3,14 @@
  * 各種行動（攻撃、防御、魔法、アイテム）の実行と結果を管理する
  */
 class ActionResolver {
-    constructor(actors, inventories, commandsData) {
+    constructor(actors, inventories, commandsData, messages = {}, locale = 'ja') {
         this.actors = actors;
         this.inventories = inventories;
         this.commandsData = commandsData;
+        this.messages = messages;
+        this.locale = locale;
         this.damageCalculator = new DamageCalculator(actors, inventories);
-        this.commandEvaluator = new CommandEvaluator(commandsData, inventories);
+        this.commandEvaluator = new CommandEvaluator(commandsData, inventories, messages, locale);
     }
 
     /**
@@ -34,6 +36,8 @@ class ActionResolver {
                 return this.resolveMagicAction(action);
             case 'item':
                 return this.resolveItemAction(action);
+            case 'enemy_action':
+                return this.resolveEnemyAction(action);
             default:
                 return {
                     success: false,
@@ -399,6 +403,43 @@ class ActionResolver {
         if (itemData.name.includes('薬草')) return 30;
         if (itemData.name.includes('特薬')) return 100;
         return 20; // デフォルト
+    }
+
+    /**
+     * 敵のアクション（action type）を実行する
+     * @param {Object} action - 敵のアクション
+     * @returns {Object} 実行結果
+     */
+    resolveEnemyAction(action) {
+        const { actor, actionId } = action;
+        
+        // actionIdからinventoryデータを取得
+        const actionData = this.inventories[actionId];
+        if (!actionData) {
+            return {
+                success: false,
+                message: `不明なアクション: ${actionId}`,
+                effects: []
+            };
+        }
+        
+        // CommandEvaluatorを使ってアクションのコマンドを実行
+        if (actionData.commands && actionData.commands.length > 0) {
+            const result = this.commandEvaluator.evaluateCommands(actor, actionId, null);
+            
+            return {
+                success: result.success,
+                message: result.message || `${actor.name}は${actionData.name}！`,
+                effects: result.effects || []
+            };
+        }
+        
+        // コマンドが設定されていない場合はデフォルトメッセージ
+        return {
+            success: true,
+            message: `${actor.name}は${actionData.name}！`,
+            effects: []
+        };
     }
 
     /**

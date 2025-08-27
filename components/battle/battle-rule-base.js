@@ -3,9 +3,11 @@
  * 各種バトルシステムの共通インターフェースを定義する
  */
 class BattleRuleBase {
-    constructor(actors, inventories, playerParty, enemyParty, actionResolver) {
+    constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver) {
         this.actors = actors;
         this.inventories = inventories;
+        this.messages = messages;
+        this.locale = locale;
         this.playerParty = playerParty;
         this.enemyParty = enemyParty;
         this.actionResolver = actionResolver;

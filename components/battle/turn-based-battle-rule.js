@@ -3,8 +3,8 @@
  * battle_rule_1.mdで定義されたターン制バトルシステムを実装する
  */
 class TurnBasedBattleRule extends BattleRuleBase {
-    constructor(actors, inventories, playerParty, enemyParty, actionResolver) {
-        super(actors, inventories, playerParty, enemyParty, actionResolver);
+    constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver) {
+        super(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver);
         
         // バトル状態管理
         this.phase = 'initial'; // 'initial', 'player_selection', 'turn_execution', 'battle_end'
@@ -168,21 +168,105 @@ class TurnBasedBattleRule extends BattleRuleBase {
     }
 
     /**
-     * 敵のAI行動を生成する
+     * 敵のAI行動を生成する（マスターデータ評価版）
      * @param {Object} enemy - 敵キャラクター
      * @returns {Object} 行動オブジェクト
      */
     generateEnemyAction(enemy) {
-        // 簡単なAI: ランダムでプレイヤーを攻撃
-        const aliveEnemies = this.playerParty.filter(p => this.isActorAlive(p));
-        const target = aliveEnemies[Math.floor(Math.random() * aliveEnemies.length)];
+        // 敵のinventoryItemsから利用可能なアクションを取得
+        const availableActions = this.getAvailableEnemyActions(enemy);
         
-        return {
-            actor: enemy,
-            type: 'fight',
-            target: target,
-            params: {}
-        };
+        if (availableActions.length === 0) {
+            // アクションが無い場合は基本攻撃
+            const alivePlayers = this.playerParty.filter(p => this.isActorAlive(p));
+            const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+            
+            return {
+                actor: enemy,
+                type: 'fight',
+                target: target,
+                params: {}
+            };
+        }
+        
+        // ランダムにアクションを選択
+        const selectedAction = availableActions[Math.floor(Math.random() * availableActions.length)];
+        
+        // 行動タイプを判定してactionオブジェクトを構築
+        return this.buildEnemyActionFromInventory(enemy, selectedAction);
+    }
+    
+    /**
+     * 敵の利用可能なアクションを取得する
+     * @param {Object} enemy - 敵キャラクター
+     * @returns {Array} 利用可能なアクション配列
+     */
+    getAvailableEnemyActions(enemy) {
+        if (!enemy || !enemy.inventoryItems) {
+            return [];
+        }
+        
+        return enemy.inventoryItems.filter(inventory => {
+            const itemData = this.inventories[inventory.inventory_id];
+            // action, item, magic, weaponタイプのものを対象とする
+            return itemData && ['action', 'item', 'magic', 'weapon'].includes(itemData.type);
+        });
+    }
+    
+    /**
+     * inventoryアイテムから敵のactionオブジェクトを構築する
+     * @param {Object} enemy - 敵キャラクター
+     * @param {Object} inventoryItem - 選択されたinventoryアイテム
+     * @returns {Object} 行動オブジェクト
+     */
+    buildEnemyActionFromInventory(enemy, inventoryItem) {
+        const itemData = this.inventories[inventoryItem.inventory_id];
+        const alivePlayers = this.playerParty.filter(p => this.isActorAlive(p));
+        
+        switch (itemData.type) {
+            case 'action':
+                // アクション（様子を見ているなど）
+                return {
+                    actor: enemy,
+                    type: 'enemy_action',
+                    actionId: inventoryItem.inventory_id,
+                    target: null, // アクションはターゲット不要
+                    params: {}
+                };
+                
+            case 'magic':
+                // 魔法
+                const magicTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+                return {
+                    actor: enemy,
+                    type: 'magic',
+                    actionId: inventoryItem.inventory_id,
+                    target: magicTarget,
+                    params: {}
+                };
+                
+            case 'item':
+                // アイテム（回復など）
+                const itemTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+                return {
+                    actor: enemy,
+                    type: 'item',
+                    actionId: inventoryItem.inventory_id,
+                    target: itemTarget,
+                    params: {}
+                };
+                
+            case 'weapon':
+            default:
+                // 武器攻撃、または不明なタイプは基本攻撃扱い
+                const fightTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+                return {
+                    actor: enemy,
+                    type: 'fight',
+                    target: fightTarget,
+                    params: {}
+                };
+        }
     }
 
     /**
@@ -222,6 +306,14 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 break;
             case 'item':
                 this.executeItemAction(action);
+                break;
+            case 'enemy_action':
+                this.executeEnemyAction(action);
+                break;
+            default:
+                console.warn(`不明な行動タイプ: ${action.type}`);
+                this.currentTurnIndex++;
+                this.executeNextAction();
                 break;
         }
     }
@@ -292,6 +384,33 @@ class TurnBasedBattleRule extends BattleRuleBase {
      */
     executeItemAction(action) {
         this.showMessage(`${action.actor.name}は${action.params.itemId}を使った！`);
+        
+        setTimeout(() => {
+            this.currentTurnIndex++;
+            this.executeNextAction();
+        }, 2000);
+    }
+    
+    /**
+     * 敵のアクション（enemy_action）を実行する
+     * @param {Object} action - 敵のアクション
+     */
+    executeEnemyAction(action) {
+        // ActionResolverを使用してアクションを解決
+        const result = this.actionResolver.resolveAction(action);
+        
+        if (result.success) {
+            this.showMessage(result.message);
+        } else {
+            this.showMessage(`${action.actor.name}のアクションに失敗した！`);
+        }
+        
+        // 勝敗判定
+        const battleResult = this.checkBattleResult();
+        if (battleResult) {
+            this.endBattle(battleResult);
+            return;
+        }
         
         setTimeout(() => {
             this.currentTurnIndex++;

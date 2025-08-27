@@ -3,17 +3,19 @@
  * 複数のバトルルールを管理し、UIとの統合を行う
  */
 class BattleFlowController {
-    constructor(actors, inventories, commands, playerParty, enemyParty) {
+    constructor(actors, inventories, commands, messages, locale, playerParty, enemyParty) {
         this.actors = actors;
         this.inventories = inventories;
         this.commands = commands;
+        this.messages = messages;
+        this.locale = locale;
         this.playerParty = playerParty;
         this.enemyParty = enemyParty;
         
         this.currentBattleRule = null;
         this.availableRules = new Map();
         this.stateManager = new BattleStateManager();
-        this.actionResolver = new ActionResolver(actors, inventories, commands);
+        this.actionResolver = new ActionResolver(actors, inventories, commands, messages, locale);
         
         // UI連携用コールバック
         this.messageCallback = null;
@@ -46,6 +48,8 @@ class BattleFlowController {
         this.currentBattleRule = new RuleClass(
             this.actors,
             this.inventories,
+            this.messages,
+            this.locale,
             this.playerParty,
             this.enemyParty,
             this.actionResolver

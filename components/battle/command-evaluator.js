@@ -3,9 +3,11 @@
  * inventoriesマスターのcommand_id配列を評価し、ゲーム内効果を適用する
  */
 class CommandEvaluator {
-    constructor(commandsData, inventoriesData) {
+    constructor(commandsData, inventoriesData, messagesData = {}, locale = 'ja') {
         this.commandsData = commandsData;
         this.inventoriesData = inventoriesData;
+        this.messagesData = messagesData;
+        this.locale = locale;
         this.register = 0; // Aレジスタ
         this.battleRules = {}; // バトルルール状態
     }
@@ -384,10 +386,28 @@ class CommandEvaluator {
      * メッセージ表示コマンド
      * @param {string} message - 表示メッセージ
      */
-    executeShowMessage(message) {
+    /**
+     * メッセージ表示コマンドを実行する
+     * @param {string} messageId - messages.jsonのメッセージID
+     * @returns {Object} 実行結果
+     */
+    executeShowMessage(messageId) {
+        // messagesマスターからメッセージを取得
+        const messageData = this.messagesData[messageId];
+        if (!messageData) {
+            return {
+                success: false,
+                message: `不明なメッセージID: ${messageId}`,
+                effects: []
+            };
+        }
+        
+        // ロケールに応じたメッセージを取得
+        const localizedMessage = messageData[this.locale] || messageData.name || messageId;
+        
         return {
             success: true,
-            message: message,
+            message: localizedMessage,
             effects: []
         };
     }
