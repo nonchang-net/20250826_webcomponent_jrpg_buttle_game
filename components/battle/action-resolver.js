@@ -7,7 +7,6 @@ class ActionResolver {
         this.actors = actors;
         this.inventories = inventories;
         this.damageCalculator = new DamageCalculator(actors, inventories);
-        this.effectResolver = new EffectResolver();
     }
 
     /**
@@ -356,7 +355,7 @@ class ActionResolver {
      * @returns {boolean} 生存しているかどうか
      */
     isActorAlive(actor) {
-        return actor && actor.currentHp > 0;
+        return actor && actor.isAlive && actor.isAlive();
     }
 }
 
@@ -377,105 +376,29 @@ class DamageCalculator {
      */
     calculatePhysicalDamage(attacker, target) {
         // 攻撃者の攻撃力合計を計算
-        const attackerTotalAttack = this.calculateTotalAttackPower(attacker);
+        const attackerTotalAttack = attacker.getTotalAttackPower();
         
-        // 相手の防御力を取得（actorsマスターのdeffence値）
-        const targetDefence = this.getActorDefence(target);
+        // 相手の防御力を取得
+        const targetDefence = target.getDefence();
         
         // ダメージ計算式: (攻撃力合計 / 2) + (防御力 / 4)
         let damage = Math.floor(attackerTotalAttack / 2) + Math.floor(targetDefence / 4);
         
         // 防御状態の場合はダメージ半分
-        if (target.defendingUntilNextTurn) {
+        if (target.isDefending()) {
             damage = Math.floor(damage / 2);
-            target.defendingUntilNextTurn = false; // 防御状態を解除
+            target.setDefending(false); // 防御状態を解除
         }
 
         return Math.max(1, damage);
     }
-
-    /**
-     * アクターの攻撃力合計を計算する
-     * @param {Object} actor - アクター
-     * @returns {number} 攻撃力合計
-     */
-    calculateTotalAttackPower(actor) {
-        // 基本攻撃力（actorsマスターのattack値）
-        const baseAttack = this.getActorAttack(actor);
-        
-        // 装備武器の攻撃力を取得
-        const weaponAttack = this.getEquippedWeaponAttack(actor);
-        
-        return baseAttack + weaponAttack;
-    }
-
-    /**
-     * アクターの基本攻撃力を取得する
-     * @param {Object} actor - アクター
-     * @returns {number} 基本攻撃力
-     */
-    getActorAttack(actor) {
-        const actorData = this.actors[actor.id];
-        return actorData ? parseInt(actorData.attack) || 0 : 0;
-    }
-
-    /**
-     * アクターの防御力を取得する
-     * @param {Object} actor - アクター
-     * @returns {number} 防御力
-     */
-    getActorDefence(actor) {
-        const actorData = this.actors[actor.id];
-        return actorData ? parseInt(actorData.deffence) || 0 : 0;
-    }
-
-    /**
-     * 装備武器の攻撃力を取得する
-     * @param {Object} actor - アクター
-     * @returns {number} 武器攻撃力
-     */
-    getEquippedWeaponAttack(actor) {
-        const actorData = this.actors[actor.id];
-        if (!actorData || !actorData.inventories) {
-            return 0;
-        }
-
-        // 装備中の武器を探す
-        const equippedWeapon = actorData.inventories.find(inv => inv.equipped === "TRUE");
-        if (!equippedWeapon) {
-            return 0; // 武器を装備していない（僧侶など）
-        }
-
-        // inventoriesマスターから武器データを取得
-        const weaponData = this.inventories[equippedWeapon.inventory_id];
-        if (!weaponData || weaponData.type !== 'weapon') {
-            return 0;
-        }
-
-        // 単純攻撃マクロ（command_id=1c189a49-f917-41b3-9d31-445f88c17c89）のarg1を取得
-        const attackCommand = weaponData.commands.find(cmd => 
-            cmd.command_id === "1c189a49-f917-41b3-9d31-445f88c17c89"
-        );
-
-        return attackCommand ? parseInt(attackCommand.arg1) || 0 : 0;
-    }
 }
 
-/**
- * 効果解決クラス
- */
-class EffectResolver {
-    constructor() {
-        // 将来的にステータス効果やバフ・デバフを管理
-    }
-
-}
 
 // エクスポート
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { ActionResolver, DamageCalculator, EffectResolver };
+    module.exports = { ActionResolver, DamageCalculator };
 } else {
     window.ActionResolver = ActionResolver;
     window.DamageCalculator = DamageCalculator;
-    window.EffectResolver = EffectResolver;
 }
