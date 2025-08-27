@@ -197,6 +197,29 @@ class TurnBasedBattleRule extends BattleRuleBase {
     }
     
     /**
+     * アクションが攻撃マクロを含むかを判定する
+     * @param {Object} actionData - アクションデータ
+     * @returns {boolean} 攻撃マクロを含むかどうか
+     */
+    isAttackAction(actionData) {
+        if (!actionData.commands || actionData.commands.length === 0) {
+            return false;
+        }
+        
+        // コマンドに「単純攻撃マクロ」や「攻撃点ルール適用」が含まれているかチェック
+        return actionData.commands.some(command => {
+            const commandData = this.inventories[command.command_id] || 
+                               (this.actionResolver && this.actionResolver.commandsData ? 
+                                this.actionResolver.commandsData[command.command_id] : null);
+            
+            return commandData && (
+                command.command_id === '1c189a49-f917-41b3-9d31-445f88c17c89' || // 単純攻撃マクロ
+                command.command_id === '34e0a3a6-641a-4602-9f93-3eadfcaa5df8'    // 攻撃点ルール適用
+            );
+        });
+    }
+    
+    /**
      * 敵の利用可能なアクションを取得する
      * @param {Object} enemy - 敵キャラクター
      * @returns {Array} 利用可能なアクション配列
@@ -225,14 +248,27 @@ class TurnBasedBattleRule extends BattleRuleBase {
         
         switch (itemData.type) {
             case 'action':
-                // アクション（様子を見ているなど）
-                return {
-                    actor: enemy,
-                    type: 'enemy_action',
-                    actionId: inventoryItem.inventory_id,
-                    target: null, // アクションはターゲット不要
-                    params: {}
-                };
+                // アクションを詳しく解析（攻撃マクロを含むかチェック）
+                if (this.isAttackAction(itemData)) {
+                    // 攻撃マクロを含むアクション
+                    const attackTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+                    return {
+                        actor: enemy,
+                        type: 'enemy_attack_action',
+                        actionId: inventoryItem.inventory_id,
+                        target: attackTarget,
+                        params: {}
+                    };
+                } else {
+                    // 通常のアクション（様子を見ているなど）
+                    return {
+                        actor: enemy,
+                        type: 'enemy_action',
+                        actionId: inventoryItem.inventory_id,
+                        target: null, // アクションはターゲット不要
+                        params: {}
+                    };
+                }
                 
             case 'magic':
                 // 魔法
@@ -309,6 +345,9 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 break;
             case 'enemy_action':
                 this.executeEnemyAction(action);
+                break;
+            case 'enemy_attack_action':
+                this.executeEnemyAttackAction(action);
                 break;
             default:
                 console.warn(`不明な行動タイプ: ${action.type}`);
@@ -403,6 +442,49 @@ class TurnBasedBattleRule extends BattleRuleBase {
             this.showMessage(result.message);
         } else {
             this.showMessage(`${action.actor.name}のアクションに失敗した！`);
+        }
+        
+        // 勝敗判定
+        const battleResult = this.checkBattleResult();
+        if (battleResult) {
+            this.endBattle(battleResult);
+            return;
+        }
+        
+        setTimeout(() => {
+            this.currentTurnIndex++;
+            this.executeNextAction();
+        }, 2000);
+    }
+
+    /**
+     * 敵の攻撃アクション（enemy_attack_action）を実行する
+     * @param {Object} action - 敵の攻撃アクション
+     */
+    executeEnemyAttackAction(action) {
+        const { actor, target, actionId } = action;
+        
+        // ActionResolverを使用してコマンド評価による攻撃を解決
+        const result = this.actionResolver.resolveAction({
+            type: 'enemy_action', // ActionResolverには通常のenemyActionとして渡す
+            actor: actor,
+            target: target,
+            actionId: actionId
+        });
+        
+        if (result.success) {
+            this.showMessage(result.message);
+            
+            // 攻撃による効果（ダメージなど）を適用
+            if (result.effects && result.effects.length > 0) {
+                result.effects.forEach(effect => {
+                    if (effect.type === 'damage' && effect.target) {
+                        this.showMessage(`${effect.target.name}に${effect.amount}のダメージ！`);
+                    }
+                });
+            }
+        } else {
+            this.showMessage(`${actor.name}の攻撃に失敗した！`);
         }
         
         // 勝敗判定

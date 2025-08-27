@@ -411,7 +411,7 @@ class ActionResolver {
      * @returns {Object} 実行結果
      */
     resolveEnemyAction(action) {
-        const { actor, actionId } = action;
+        const { actor, target, actionId } = action;
         
         // actionIdからinventoryデータを取得
         const actionData = this.inventories[actionId];
@@ -425,12 +425,26 @@ class ActionResolver {
         
         // CommandEvaluatorを使ってアクションのコマンドを実行
         if (actionData.commands && actionData.commands.length > 0) {
-            const result = this.commandEvaluator.evaluateCommands(actor, actionId, null);
+            const result = this.commandEvaluator.evaluateCommands(actor, actionId, target);
+            
+            // 攻撃マクロの結果をダメージとして適用
+            const effects = [];
+            if (result.success && target && this.isAttackAction(actionData)) {
+                // CommandEvaluatorの評価結果（レジスタ値）をダメージとして適用
+                const damage = Math.max(1, this.commandEvaluator.register);
+                const actualDamage = target.takeDamage(damage);
+                
+                effects.push({
+                    type: 'damage',
+                    target: target,
+                    amount: actualDamage
+                });
+            }
             
             return {
                 success: result.success,
                 message: result.message || `${actor.name}は${actionData.name}！`,
-                effects: result.effects || []
+                effects: [...(result.effects || []), ...effects]
             };
         }
         
@@ -440,6 +454,23 @@ class ActionResolver {
             message: `${actor.name}は${actionData.name}！`,
             effects: []
         };
+    }
+
+    /**
+     * アクションが攻撃マクロを含むかを判定する
+     * @param {Object} actionData - アクションデータ
+     * @returns {boolean} 攻撃マクロを含むかどうか
+     */
+    isAttackAction(actionData) {
+        if (!actionData.commands || actionData.commands.length === 0) {
+            return false;
+        }
+        
+        // コマンドに「単純攻撃マクロ」や「攻撃点ルール適用」が含まれているかチェック
+        return actionData.commands.some(command => {
+            return command.command_id === '1c189a49-f917-41b3-9d31-445f88c17c89' || // 単純攻撃マクロ
+                   command.command_id === '34e0a3a6-641a-4602-9f93-3eadfcaa5df8';    // 攻撃点ルール適用
+        });
     }
 
     /**
