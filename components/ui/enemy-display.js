@@ -120,7 +120,7 @@ class EnemyDisplay extends HTMLElement {
             
             enemyElement.innerHTML = `
                 <div class="enemy-name">${enemy.name}</div>
-                <div class="enemy-hp">HP: ${enemy.currentHp || enemy.hp}/${enemy.hp}</div>
+                <div class="enemy-hp">HP: ${enemy.currentHp}/${enemy.maxHp}</div>
                 ${enemy.status ? `<div class="enemy-status">${enemy.status}</div>` : ''}
             `;
             

@@ -3,10 +3,12 @@
  * 各種行動（攻撃、防御、魔法、アイテム）の実行と結果を管理する
  */
 class ActionResolver {
-    constructor(actors, inventories) {
+    constructor(actors, inventories, commandsData) {
         this.actors = actors;
         this.inventories = inventories;
+        this.commandsData = commandsData;
         this.damageCalculator = new DamageCalculator(actors, inventories);
+        this.commandEvaluator = new CommandEvaluator(commandsData, inventories);
     }
 
     /**
@@ -58,39 +60,88 @@ class ActionResolver {
             };
         }
 
-        // ダメージ計算
-        const damage = this.damageCalculator.calculatePhysicalDamage(attacker, target);
+        // 装備武器のコマンドを評価
+        const weaponEffect = this.evaluateWeaponCommands(attacker, target);
+        console.log("test",weaponEffect)
         
-        // ダメージ適用
-        const previousHp = target.currentHp;
-        target.currentHp = Math.max(0, target.currentHp - damage);
-        const actualDamage = previousHp - target.currentHp;
+        // 複数回攻撃の設定があるかチェック
+        const multipleAttackCount = weaponEffect.battleRules?.multipleAttack || 1;
+        
+        const allEffects = [];
+        const messages = [];
+        let totalDamage = 0;
 
-        const effects = [
-            {
+        // 指定回数分の攻撃を実行
+        for (let i = 0; i < multipleAttackCount; i++) {
+            if (!this.isActorAlive(target)) {
+                break; // 対象が倒れた場合は攻撃を中断
+            }
+
+            // ダメージ計算
+            const damage = this.damageCalculator.calculatePhysicalDamage(attacker, target, weaponEffect.battleRules);
+            
+            // ダメージ適用
+            const previousHp = target.currentHp;
+            target.currentHp = Math.max(0, target.currentHp - damage);
+            const actualDamage = previousHp - target.currentHp;
+            totalDamage += actualDamage;
+
+            allEffects.push({
                 type: 'damage',
                 target: target,
                 amount: actualDamage,
                 previousHp: previousHp,
-                newHp: target.currentHp
-            }
-        ];
-
-        let message = `${attacker.name}の攻撃！${target.name}に${actualDamage}のダメージ！`;
-        
-        if (target.currentHp <= 0) {
-            message += `\n${target.name}は倒れた！`;
-            effects.push({
-                type: 'defeat',
-                target: target
+                newHp: target.currentHp,
+                attackNumber: i + 1,
+                totalAttacks: multipleAttackCount
             });
+
+            // 攻撃メッセージ
+            if (multipleAttackCount > 1) {
+                messages.push(`${attacker.name}の${i + 1}回目の攻撃！${target.name}に${actualDamage}のダメージ！`);
+            } else {
+                messages.push(`${attacker.name}の攻撃！${target.name}に${actualDamage}のダメージ！`);
+            }
+
+            // 対象が倒れた場合
+            if (target.currentHp <= 0) {
+                messages.push(`${target.name}は倒れた！`);
+                allEffects.push({
+                    type: 'defeat',
+                    target: target
+                });
+                break;
+            }
+        }
+
+        // 複数回攻撃の場合は総ダメージも表示
+        let finalMessage = messages.join('\n');
+        if (multipleAttackCount > 1) {
+            finalMessage += `\n総ダメージ: ${totalDamage}`;
         }
 
         return {
             success: true,
-            message: message,
-            effects: effects
+            message: finalMessage,
+            effects: allEffects
         };
+    }
+
+    /**
+     * 装備武器のコマンドを評価する
+     * @param {Object} actor - 攻撃者
+     * @param {Object} target - 対象
+     * @returns {Object} コマンド評価結果
+     */
+    evaluateWeaponCommands(actor, target) {
+        // 装備中の武器IDを取得
+        const weaponId = actor.equipments?.weapon;
+        if (!weaponId) {
+            return { battleRules: {}, effects: [] };
+        }
+
+        // 武器のコマンドを評価
+        return this.commandEvaluator.evaluateCommands(actor, weaponId, target);
     }
 
     /**
@@ -372,9 +423,10 @@ class DamageCalculator {
      * 物理ダメージを計算する
      * @param {Object} attacker - 攻撃者
      * @param {Object} target - 対象
+     * @param {Object} battleRules - バトルルール設定
      * @returns {number} ダメージ量
      */
-    calculatePhysicalDamage(attacker, target) {
+    calculatePhysicalDamage(attacker, target, battleRules = {}) {
         // 攻撃者の攻撃力合計を計算
         const attackerTotalAttack = attacker.getTotalAttackPower();
         
@@ -383,6 +435,11 @@ class DamageCalculator {
         
         // ダメージ計算式: (攻撃力合計 / 2) + (防御力 / 4)
         let damage = Math.floor(attackerTotalAttack / 2) + Math.floor(targetDefence / 4);
+        
+        // 属性攻撃の効果を適用
+        if (battleRules.attribute) {
+            // TODO: 属性攻撃の効果を実装（将来拡張）
+        }
         
         // 防御状態の場合はダメージ半分
         if (target.isDefending()) {

@@ -9,6 +9,7 @@ class BattleScene extends HTMLElement {
         super();
         this.actors = {};
         this.inventories = {};
+        this.commands = {};
         this.playerParty = [];
         this.enemyParty = [];
         this.battleFlowController = null;
@@ -37,17 +38,19 @@ class BattleScene extends HTMLElement {
 
     /**
      * マスターデータを読み込む
-     * アクターデータとインベントリデータを並行読み込みする
+     * アクターデータ、インベントリデータ、コマンドデータを並行読み込みする
      */
     async loadMasterData() {
         try {
-            const [actorsResponse, inventoriesResponse] = await Promise.all([
+            const [actorsResponse, inventoriesResponse, commandsResponse] = await Promise.all([
                 fetch('./MasterData/actors.json'),
-                fetch('./MasterData/inventories.json')
+                fetch('./MasterData/inventories.json'),
+                fetch('./MasterData/commands.json')
             ]);
             
             this.actors = await actorsResponse.json();
             this.inventories = await inventoriesResponse.json();
+            this.commands = await commandsResponse.json();
             this.setupParties();
         } catch (error) {
             console.error('マスターデータの読み込みに失敗しました:', error);
@@ -64,10 +67,13 @@ class BattleScene extends HTMLElement {
         
         Object.entries(this.actors).forEach(([id, actor]) => {
             const actorWithId = { id, ...actor };
+            // Actorクラスのインスタンスとして作成
+            const actorInstance = new Actor(actorWithId, this.actors, this.inventories);
+            
             if (actor.is_enemy === "FALSE") {
-                this.playerParty.push(actorWithId);
+                this.playerParty.push(actorInstance);
             } else {
-                this.enemyParty.push(actorWithId);
+                this.enemyParty.push(actorInstance);
             }
         });
     }
@@ -103,6 +109,7 @@ class BattleScene extends HTMLElement {
         this.battleFlowController = new BattleFlowController(
             this.actors,
             this.inventories,
+            this.commands,
             this.playerParty,
             this.enemyParty
         );

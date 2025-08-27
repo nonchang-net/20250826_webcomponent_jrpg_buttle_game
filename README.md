@@ -11,3 +11,4 @@ Toolsフォルダにある、別途作成した「MasterDataSheetParser」コマ
 ```
 ./Tools/MasterDataSheetParser/MasterDataSheetParser sheetsApi "https://docs.google.com/spreadsheets/d/11ZHLpOBwHapq6Wtw7OaTx5oe78cGJzpvBdgnBUMmlYs/" --folder=MasterData --key=./secrets/sheets_api_service_account.json --cleanup messages commands inventories actors
 ```
+

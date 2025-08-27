@@ -193,17 +193,17 @@ class PartyStatus extends HTMLElement {
             memberElement.dataset.index = index;
             
             // HP/MPの計算
-            const maxHp = parseInt(member.hp);
-            const maxMp = parseInt(member.mp);
+            const maxHp = member.maxHp;
+            const maxMp = member.maxMp;
             const hpPercentage = Math.floor((member.currentHp / maxHp) * 100);
             const mpPercentage = Math.floor((member.currentMp / maxMp) * 100);
             
             // 装備情報を取得
-            const equippedItem = member.inventories?.find(item => item.equipped === "TRUE");
+            const equippedItem = member.inventoryItems?.find(item => item.equipped === "TRUE");
             const equipmentText = equippedItem ? equippedItem.inventories : '装備なし';
             
             // ステータス効果の表示
-            const statusEffectsHtml = member.statusEffects.length > 0 
+            const statusEffectsHtml = member.statusEffects && member.statusEffects.length > 0 
                 ? `<div class="status-effects">
                     ${member.statusEffects.map(effect => `<span class="status-effect">${effect}</span>`).join('')}
                    </div>`

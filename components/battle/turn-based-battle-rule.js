@@ -3,8 +3,8 @@
  * battle_rule_1.mdで定義されたターン制バトルシステムを実装する
  */
 class TurnBasedBattleRule extends BattleRuleBase {
-    constructor(actors, inventories, playerParty, enemyParty) {
-        super(actors, inventories, playerParty, enemyParty);
+    constructor(actors, inventories, playerParty, enemyParty, actionResolver) {
+        super(actors, inventories, playerParty, enemyParty, actionResolver);
         
         // バトル状態管理
         this.phase = 'initial'; // 'initial', 'player_selection', 'turn_execution', 'battle_end'
@@ -231,17 +231,13 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - 攻撃行動
      */
     executeFightAction(action) {
-        if (!this.isActorAlive(action.target)) {
-            this.showMessage(`${action.actor.name}の攻撃！しかし${action.target.name}はすでに倒れている！`);
+        // ActionResolverを使用して攻撃を解決
+        const result = this.actionResolver.resolveAction(action);
+        
+        if (result.success) {
+            this.showMessage(result.message);
         } else {
-            const damage = Math.floor(Math.random() * 20) + 10; // 10-29のランダムダメージ
-            action.target.currentHp = Math.max(0, action.target.currentHp - damage);
-            
-            this.showMessage(`${action.actor.name}の攻撃！${action.target.name}に${damage}のダメージ！`);
-            
-            if (action.target.currentHp <= 0) {
-                this.showMessage(`${action.target.name}は倒れた！`);
-            }
+            this.showMessage(result.message || `${action.actor.name}の攻撃が失敗しました`);
         }
 
         setTimeout(() => {

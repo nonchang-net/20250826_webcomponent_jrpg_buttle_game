@@ -24,6 +24,9 @@ class Actor {
         
         // インベントリ
         this.inventoryItems = actorData.inventories || [];
+        
+        // 装備情報を構築
+        this.equipments = this.buildEquipments();
     }
 
     /**
@@ -193,6 +196,39 @@ class Actor {
             totalAttackPower: this.getTotalAttackPower(),
             defence: this.getDefence()
         };
+    }
+
+    /**
+     * 装備情報を構築する
+     * @returns {Object} 装備情報
+     */
+    buildEquipments() {
+        const equipments = {
+            weapon: null,
+            armor: null,
+            accessory: null
+        };
+
+        for (const item of this.inventoryItems) {
+            if (item.equipped === "TRUE") {
+                const itemData = this.inventories[item.inventory_id];
+                if (itemData) {
+                    switch (itemData.type) {
+                        case 'weapon':
+                            equipments.weapon = item.inventory_id;
+                            break;
+                        case 'armor':
+                            equipments.armor = item.inventory_id;
+                            break;
+                        case 'accessory':
+                            equipments.accessory = item.inventory_id;
+                            break;
+                    }
+                }
+            }
+        }
+
+        return equipments;
     }
 
     /**
