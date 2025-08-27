@@ -63,63 +63,51 @@
     ]
   },
   "7c009e11-d37b-4195-b3c9-0ea8ae493730": {
-    "name": "ドラゴン",
+    "name": "スライム1",
     "is_enemy": "TRUE",
-    "hp": "400",
+    "hp": "30",
     "mp": "0",
     "attack": "30",
-    "deffence": "20",
+    "deffence": "10",
     "agility": "10",
     "inventories": [
       {
-        "inventories": "炎を吐くLv3",
-        "inventory_id": "390cbc7e-60d8-401f-986f-3c2bb8ae4a27",
+        "inventories": "攻撃",
+        "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
         "quantity": "1",
         "equipped": "FALSE"
       }
     ]
   },
   "1a21d68a-c66b-47f5-a508-45c0c87b10d5": {
-    "name": "魔王",
+    "name": "スライム2",
     "is_enemy": "TRUE",
-    "hp": "800",
+    "hp": "40",
     "mp": "30",
     "attack": "30",
     "deffence": "10",
     "agility": "8",
     "inventories": [
       {
-        "inventories": "様子を見ている",
-        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
-        "quantity": "1",
-        "equipped": "FALSE"
-      },
-      {
-        "inventories": "魔王の2回攻撃",
-        "inventory_id": "6da093f9-2768-44fc-926a-64e5eb5f2efe",
+        "inventories": "攻撃",
+        "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
         "quantity": "1",
         "equipped": "FALSE"
       }
     ]
   },
   "78e5714a-db3b-489d-b6b0-6cb3f1f67ed0": {
-    "name": "魔神官",
+    "name": "スライム3",
     "is_enemy": "TRUE",
-    "hp": "200",
+    "hp": "20",
     "mp": "9",
     "attack": "10",
     "deffence": "10",
     "agility": "6",
     "inventories": [
       {
-        "inventories": "様子を見ている",
-        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
-        "quantity": "1",
-        "equipped": "FALSE"
-      },
-      {
-        "inventories": "回復魔法(小)",
-        "inventory_id": "73e37231-90c3-4c2d-8ded-a87348a1b14d",
+        "inventories": "攻撃",
+        "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
         "quantity": "1",
         "equipped": "FALSE"
       }

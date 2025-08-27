@@ -150,7 +150,7 @@ class BattleScene extends HTMLElement {
         // 敵選択イベント
         this.addEventListener('enemy-selected', (event) => {
             const selectedEnemy = event.detail.enemy;
-            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // 攻撃行動をBattleFlowControllerに設定
@@ -166,7 +166,7 @@ class BattleScene extends HTMLElement {
         // アイテム選択イベント
         this.addEventListener('item-selected', (event) => {
             const itemId = event.detail.itemId;
-            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // アイテム使用行動をBattleFlowControllerに設定
@@ -177,7 +177,7 @@ class BattleScene extends HTMLElement {
         // 魔法選択イベント
         this.addEventListener('magic-selected', (event) => {
             const spellId = event.detail.spellId;
-            const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+            const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // 魔法行動をBattleFlowControllerに設定
@@ -204,9 +204,8 @@ class BattleScene extends HTMLElement {
             return;
         }
 
-        // 現在のプレイヤー（勇者）を取得
-        // TODO: なぜ勇者固定なのか確認する
-        const currentPlayer = this.playerParty.find(p => p.name === '勇者') || this.playerParty[0];
+        // 現在行動選択中のプレイヤーを取得
+        const currentPlayer = this.battleFlowController.getCurrentPlayer();
         if (!currentPlayer) {
             console.error('No current player found');
             return;
@@ -243,14 +242,6 @@ class BattleScene extends HTMLElement {
         }
     }
 
-    /**
-     * 攻撃アクションを実行する
-     */
-    performAttack() {
-        if (this.display) {
-            this.display.performAttackAnimation(this.enemyParty);
-        }
-    }
 }
 
 // カスタム要素として登録

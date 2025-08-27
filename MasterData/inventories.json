@@ -62,6 +62,20 @@
       }
     ]
   },
+  "67b71fdc-e0a6-4981-b63c-afe86e5dec8f": {
+    "name": "攻撃",
+    "type": "action",
+    "price": "0",
+    "commands": [
+      {
+        "commands": "単純攻撃マクロ",
+        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "arg1": "0",
+        "arg2": null,
+        "arg3": null
+      }
+    ]
+  },
   "390cbc7e-60d8-401f-986f-3c2bb8ae4a27": {
     "name": "炎を吐くLv3",
     "type": "action",

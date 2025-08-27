@@ -314,6 +314,23 @@ class BattleFlowController {
         };
     }
 
+    /**
+     * 現在行動選択中のプレイヤーを取得する
+     * @returns {Object|null} 現在のプレイヤー
+     */
+    getCurrentPlayer() {
+        if (!this.currentBattleRule || !this.currentBattleRule.getAlivePlayerByIndex) {
+            return null;
+        }
+        
+        // TurnBasedBattleRuleの場合
+        if (this.currentBattleRule.constructor.name === 'TurnBasedBattleRule') {
+            return this.currentBattleRule.getAlivePlayerByIndex(this.currentBattleRule.currentPlayerIndex);
+        }
+        
+        return null;
+    }
+
 }
 
 // エクスポート
