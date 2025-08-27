@@ -186,11 +186,11 @@ class BattleFlowController {
      * @returns {Array} 利用可能なアイテム配列
      */
     getAvailableItems(currentPlayer) {
-        if (!currentPlayer || !currentPlayer.inventories) {
+        if (!currentPlayer || !currentPlayer.inventoryItems) {
             return [];
         }
 
-        return currentPlayer.inventories
+        return currentPlayer.inventoryItems
             .map(inventory => {
                 const itemData = this.inventories[inventory.inventory_id];
                 if (itemData && (itemData.type === 'item' || itemData.type === 'weapon')) {
@@ -211,11 +211,11 @@ class BattleFlowController {
      * @returns {Array} 利用可能な魔法配列
      */
     getAvailableMagic(currentPlayer) {
-        if (!currentPlayer || !currentPlayer.inventories) {
+        if (!currentPlayer || !currentPlayer.inventoryItems) {
             return [];
         }
 
-        return currentPlayer.inventories
+        return currentPlayer.inventoryItems
             .map(inventory => {
                 const spellData = this.inventories[inventory.inventory_id];
                 if (spellData && spellData.type === 'magic') {

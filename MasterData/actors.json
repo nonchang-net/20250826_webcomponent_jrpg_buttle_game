@@ -76,6 +76,12 @@
         "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
         "quantity": "1",
         "equipped": "FALSE"
+      },
+      {
+        "inventories": "様子を見ている",
+        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
@@ -93,6 +99,12 @@
         "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
         "quantity": "1",
         "equipped": "FALSE"
+      },
+      {
+        "inventories": "様子を見ている",
+        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
@@ -108,6 +120,12 @@
       {
         "inventories": "攻撃",
         "inventory_id": "67b71fdc-e0a6-4981-b63c-afe86e5dec8f",
+        "quantity": "1",
+        "equipped": "FALSE"
+      },
+      {
+        "inventories": "様子を見ている",
+        "inventory_id": "e92f19ae-79ae-46ed-8b2c-0439b5554075",
         "quantity": "1",
         "equipped": "FALSE"
       }

@@ -128,7 +128,7 @@ class CommandEvaluator {
         const arg2 = command.arg2;
         const arg3 = command.arg3;
 
-        console.log(`基本command「${commandData.name}」評価`)
+        // console.log(`基本command「${commandData.name}」評価`)
 
         switch (commandData.name) {
             case '定数加算':

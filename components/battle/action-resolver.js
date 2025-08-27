@@ -62,7 +62,8 @@ class ActionResolver {
 
         // 装備武器のコマンドを評価
         const weaponEffect = this.evaluateWeaponCommands(attacker, target);
-        console.log("test",weaponEffect)
+        
+        //console.log("test",weaponEffect)
         
         // 複数回攻撃の設定があるかチェック
         const multipleAttackCount = weaponEffect.battleRules?.multipleAttack || 1;
