@@ -71,13 +71,15 @@ class BattleScene extends HTMLElement {
         
         Object.entries(this.actors).forEach(([id, actor]) => {
             const actorWithId = { id, ...actor };
-            // Actorクラスのインスタンスとして作成
-            const actorInstance = new Actor(actorWithId, this.actors, this.inventories);
             
             if (actor.is_enemy === "FALSE") {
+                // プレイヤーはActorクラスのインスタンスとして作成
+                const actorInstance = new Actor(actorWithId, this.actors, this.inventories);
                 this.playerParty.push(actorInstance);
             } else {
-                this.enemyParty.push(actorInstance);
+                // 敵はEnemyクラスのインスタンスとして作成
+                const enemyInstance = new Enemy(actorWithId, this.actors, this.inventories, this.commands);
+                this.enemyParty.push(enemyInstance);
             }
         });
     }
