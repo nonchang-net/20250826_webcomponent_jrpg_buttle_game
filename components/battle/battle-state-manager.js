@@ -177,46 +177,6 @@ class BattleStateManager {
         });
     }
 
-    /**
-     * 状態履歴を取得する
-     * @param {number} limit - 取得する履歴の数（デフォルト: 10）
-     * @returns {Array} 状態履歴配列
-     */
-    getHistory(limit = 10) {
-        return this.history.slice(-limit);
-    }
-
-    /**
-     * 前の状態に戻す（アンドゥ機能）
-     * @returns {boolean} 戻せたかどうか
-     */
-    undo() {
-        if (this.history.length === 0) {
-            return false;
-        }
-
-        const lastEntry = this.history.pop();
-        this.state = { ...lastEntry.previousState };
-        
-        // リスナーに通知（アンドゥとして）
-        this.notifyStateChange(lastEntry.newState, this.state, { undo: true });
-        
-        return true;
-    }
-
-    /**
-     * 現在の状態が指定された条件を満たすかチェックする
-     * @param {Object} conditions - チェック条件
-     * @returns {boolean} 条件を満たすかどうか
-     */
-    checkConditions(conditions) {
-        for (const [key, expectedValue] of Object.entries(conditions)) {
-            if (this.state[key] !== expectedValue) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     /**
      * デバッグ用：現在の状態を文字列として出力

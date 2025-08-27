@@ -314,16 +314,6 @@ class BattleFlowController {
         };
     }
 
-    /**
-     * デバッグ用: 現在の状態を出力
-     */
-    debugCurrentState() {
-        console.log('=== Battle Flow Debug ===');
-        console.log('Rule:', this.getBattleRuleInfo().current);
-        console.log('State:', this.stateManager.toString());
-        console.log('Battle State:', this.getBattleState());
-        console.log('========================');
-    }
 }
 
 // エクスポート

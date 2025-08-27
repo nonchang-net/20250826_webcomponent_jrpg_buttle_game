@@ -393,14 +393,6 @@ class EffectResolver {
         // 将来的にステータス効果やバフ・デバフを管理
     }
 
-    /**
-     * ステータス効果を適用する
-     * @param {Object} target - 対象
-     * @param {Object} effect - 効果
-     */
-    applyStatusEffect(target, effect) {
-        // 将来実装: 毒、麻痺、混乱などの状態異常
-    }
 }
 
 // エクスポート
