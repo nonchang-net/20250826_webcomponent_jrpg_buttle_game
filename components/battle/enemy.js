@@ -54,103 +54,25 @@ class Enemy extends Actor {
 
     /**
      * inventoryアイテムから行動オブジェクトを構築する
+     * マスターデータのコマンドで統一的に処理
      * @param {Object} inventoryItem - 選択されたinventoryアイテム
      * @param {Array} playerParty - プレイヤーパーティ
      * @returns {Object} 行動オブジェクト
      */
     buildActionFromInventory(inventoryItem, playerParty) {
-        const itemData = this.inventories[inventoryItem.inventory_id];
-        const alivePlayers = playerParty.filter(p => this.isActorAlive(p));
-        
-        switch (itemData.type) {
-            case 'action':
-                // アクションを詳しく解析（攻撃マクロを含むかチェック）
-                if (this.isAttackAction(itemData)) {
-                    // 攻撃マクロを含むアクション
-                    const attackTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-                    return {
-                        actor: this,
-                        type: 'enemy_attack_action',
-                        actionId: inventoryItem.inventory_id,
-                        target: attackTarget,
-                        params: {}
-                    };
-                } else {
-                    // 通常のアクション（様子を見ているなど）
-                    return {
-                        actor: this,
-                        type: 'enemy_action',
-                        actionId: inventoryItem.inventory_id,
-                        target: null, // アクションはターゲット不要
-                        params: {}
-                    };
-                }
-                
-            case 'magic':
-                // 魔法
-                const magicTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-                return {
-                    actor: this,
-                    type: 'magic',
-                    actionId: inventoryItem.inventory_id,
-                    target: magicTarget,
-                    params: {}
-                };
-                
-            case 'item':
-                // アイテム（回復など）
-                const itemTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-                return {
-                    actor: this,
-                    type: 'item',
-                    actionId: inventoryItem.inventory_id,
-                    target: itemTarget,
-                    params: {}
-                };
-                
-            case 'weapon':
-            default:
-                // 武器攻撃、または不明なタイプは基本攻撃扱い
-                const fightTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-                return {
-                    actor: this,
-                    type: 'fight',
-                    target: fightTarget,
-                    params: {}
-                };
-        }
+        // 全てのアクションを統一的に処理
+        // ターゲット設定やダメージ適用はCommandEvaluatorが担当
+        return {
+            actor: this,
+            type: 'enemy_action',
+            actionId: inventoryItem.inventory_id,
+            target: null, // CommandEvaluatorで設定される
+            params: {
+                playerParty: playerParty // ランダムターゲット選択用
+            }
+        };
     }
 
-    /**
-     * アクションが攻撃マクロを含むかを判定する
-     * @param {Object} actionData - アクションデータ
-     * @returns {boolean} 攻撃マクロを含むかどうか
-     */
-    isAttackAction(actionData) {
-        if (!actionData.commands || actionData.commands.length === 0) {
-            return false;
-        }
-        
-        // コマンドに「単純攻撃マクロ」や「攻撃点ルール適用」が含まれているかチェック
-        return actionData.commands.some(command => {
-            const commandData = this.inventories[command.command_id] || 
-                               (this.commandsDatabase ? this.commandsDatabase[command.command_id] : null);
-            
-            return commandData && (
-                command.command_id === '1c189a49-f917-41b3-9d31-445f88c17c89' || // 単純攻撃マクロ
-                command.command_id === '34e0a3a6-641a-4602-9f93-3eadfcaa5df8'    // 攻撃点ルール適用
-            );
-        });
-    }
-
-    /**
-     * アクターが生存しているかチェック（プライベートヘルパー）
-     * @param {Object} actor - アクター
-     * @returns {boolean} 生存しているかどうか
-     */
-    isActorAlive(actor) {
-        return actor && actor.isAlive && actor.isAlive();
-    }
 }
 
 // エクスポート

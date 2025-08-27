@@ -411,11 +411,15 @@ class ActionResolver {
      * @returns {Object} 実行結果
      */
     resolveEnemyAction(action) {
-        const { actor, target, actionId } = action;
+        const { actor, actionId, params } = action;
+        const playerParty = params ? params.playerParty : null;
+        
+        console.log('resolveEnemyAction:', { actor: actor.name, actionId, playerParty: playerParty ? playerParty.length : 0 });
         
         // actionIdからinventoryデータを取得
         const actionData = this.inventories[actionId];
         if (!actionData) {
+            console.log('actionData not found:', actionId);
             return {
                 success: false,
                 message: `不明なアクション: ${actionId}`,
@@ -423,28 +427,49 @@ class ActionResolver {
             };
         }
         
+        console.log('actionData found:', actionData.name, actionData.commands?.length || 0, 'commands');
+        
         // CommandEvaluatorを使ってアクションのコマンドを実行
         if (actionData.commands && actionData.commands.length > 0) {
-            const result = this.commandEvaluator.evaluateCommands(actor, actionId, target);
+            const result = this.commandEvaluator.evaluateCommands(actor, actionId, null, playerParty);
+            console.log('commandEvaluator result:', { success: result.success, selectedTarget: result.selectedTarget?.name, effectsCount: result.effects?.length || 0 });
             
-            // 攻撃マクロの結果をダメージとして適用
+            // CommandEvaluatorで設定されたターゲットを使用
+            const targetFromEvaluator = result.selectedTarget;
             const effects = [];
-            if (result.success && target && this.isAttackAction(actionData)) {
-                // CommandEvaluatorの評価結果（レジスタ値）をダメージとして適用
-                const damage = Math.max(1, this.commandEvaluator.register);
-                const actualDamage = target.takeDamage(damage);
-                
-                effects.push({
-                    type: 'damage',
-                    target: target,
-                    amount: actualDamage
-                });
+            
+            if (result.success && targetFromEvaluator) {
+                // CommandEvaluatorの評価結果でattack効果がある場合はダメージ適用
+                const attackEffects = result.effects ? result.effects.filter(e => e.type === 'attack') : [];
+                console.log('attackEffects found:', attackEffects.length);
+                if (attackEffects.length > 0) {
+                    // 攻撃効果を実際のダメージに変換して適用
+                    attackEffects.forEach(attackEffect => {
+                        // ダメージ計算：基本ダメージから対象の防御力を引く
+                        const baseDamage = attackEffect.baseDamage || 0;
+                        const targetDefence = targetFromEvaluator.deffence || 0; // 注意：スペルミス対応
+                        const finalDamage = Math.max(1, baseDamage - targetDefence);
+                        
+                        console.log('damage calculation:', { baseDamage, targetDefence, finalDamage });
+                        
+                        const actualDamage = targetFromEvaluator.takeDamage(finalDamage);
+                        
+                        effects.push({
+                            type: 'damage',
+                            target: targetFromEvaluator,
+                            amount: actualDamage
+                        });
+                    });
+                }
+            } else {
+                console.log('Command evaluation failed or no target:', { success: result.success, target: !!targetFromEvaluator });
             }
             
             return {
                 success: result.success,
                 message: result.message || `${actor.name}は${actionData.name}！`,
-                effects: [...(result.effects || []), ...effects]
+                effects: [...(result.effects || []), ...effects],
+                finalTarget: targetFromEvaluator // 最終的なターゲット情報
             };
         }
         
@@ -456,22 +481,6 @@ class ActionResolver {
         };
     }
 
-    /**
-     * アクションが攻撃マクロを含むかを判定する
-     * @param {Object} actionData - アクションデータ
-     * @returns {boolean} 攻撃マクロを含むかどうか
-     */
-    isAttackAction(actionData) {
-        if (!actionData.commands || actionData.commands.length === 0) {
-            return false;
-        }
-        
-        // コマンドに「単純攻撃マクロ」や「攻撃点ルール適用」が含まれているかチェック
-        return actionData.commands.some(command => {
-            return command.command_id === '1c189a49-f917-41b3-9d31-445f88c17c89' || // 単純攻撃マクロ
-                   command.command_id === '34e0a3a6-641a-4602-9f93-3eadfcaa5df8';    // 攻撃点ルール適用
-        });
-    }
 
     /**
      * アクターが生存しているかチェック

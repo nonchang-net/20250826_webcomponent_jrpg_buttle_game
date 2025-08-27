@@ -10,6 +10,8 @@ class CommandEvaluator {
         this.locale = locale;
         this.register = 0; // Aレジスタ
         this.battleRules = {}; // バトルルール状態
+        this.selectedTarget = null; // コマンド評価中に設定されるターゲット
+        this.playerParty = null; // ランダムターゲット選択用
     }
 
     /**
@@ -17,11 +19,15 @@ class CommandEvaluator {
      * @param {Object} actor - コマンドを実行するアクター
      * @param {string} inventoryId - inventoryのID
      * @param {Object} target - 対象（必要に応じて）
+     * @param {Array} playerParty - プレイヤーパーティ（ランダムターゲット選択用）
      * @returns {Object} 評価結果
      */
-    evaluateCommands(actor, inventoryId, target = null) {
+    evaluateCommands(actor, inventoryId, target = null, playerParty = null) {
+        console.log('evaluateCommands start:', { actor: actor.name, inventoryId, target: target?.name, playerPartyCount: playerParty?.length });
+        
         const inventory = this.inventoriesData[inventoryId];
         if (!inventory || !inventory.commands) {
+            console.log('Inventory or commands not found:', inventoryId);
             return {
                 success: false,
                 message: `アイテム ${inventoryId} のコマンドが見つかりません`,
@@ -29,25 +35,38 @@ class CommandEvaluator {
             };
         }
 
+        console.log('Found inventory commands:', inventory.commands.length);
         this.resetState();
+        this.playerParty = playerParty; // ランダムターゲット選択用に保存
         const results = [];
 
-        for (const command of inventory.commands) {
+        for (let i = 0; i < inventory.commands.length; i++) {
+            const command = inventory.commands[i];
+            console.log(`Executing command ${i + 1}/${inventory.commands.length}:`, command.command_id);
+            
             const result = this.executeCommand(actor, command, target);
+            console.log(`Command ${i + 1} result:`, { success: result.success, message: result.message, effectsCount: result.effects?.length || 0 });
+            
             results.push(result);
             
             // コマンドが失敗した場合は中断
             if (!result.success) {
+                console.log('Command failed, aborting:', result.message);
                 return result;
             }
         }
 
-        return {
+        const finalResult = {
             success: true,
             message: results.map(r => r.message).filter(m => m).join('\n'),
             effects: results.flatMap(r => r.effects || []),
-            battleRules: this.battleRules
+            battleRules: this.battleRules,
+            selectedTarget: this.selectedTarget // コマンド評価で設定されたターゲット
         };
+        
+        console.log('evaluateCommands final result:', { success: finalResult.success, selectedTarget: finalResult.selectedTarget?.name, effectsCount: finalResult.effects.length });
+        
+        return finalResult;
     }
 
     /**
@@ -61,15 +80,29 @@ class CommandEvaluator {
         // 現在のactorを保存（メッセージ表示で使用）
         this.currentActor = actor;
         const commandId = command.command_id;
+        console.log('executeCommand:', { commandId, target: target?.name });
+        
         const commandData = this.commandsData[commandId];
 
+        if (!commandId) {
+            console.log('Command ID is undefined - this indicates a missing command_id in master data');
+            return {
+                success: false,
+                message: 'コマンドIDが設定されていません（マスターデータの不備）',
+                effects: []
+            };
+        }
+
         if (!commandData) {
+            console.log('Command data not found:', commandId);
             return {
                 success: false,
                 message: `不明なコマンド: ${commandId}`,
                 effects: []
             };
         }
+
+        console.log('Command data found:', commandData.name, 'isMarco:', !!(commandData.sub_commands && commandData.sub_commands.length > 0));
 
         // マクロコマンドの場合はサブコマンドを実行
         if (commandData.sub_commands && commandData.sub_commands.length > 0) {
@@ -89,11 +122,17 @@ class CommandEvaluator {
      * @returns {Object} 実行結果
      */
     executeMacroCommand(actor, parentCommand, commandData, target) {
+        console.log('executeMacroCommand:', commandData.name, 'with', commandData.sub_commands.length, 'sub-commands');
+        
         const results = [];
 
-        for (const subCommand of commandData.sub_commands) {
+        for (let i = 0; i < commandData.sub_commands.length; i++) {
+            const subCommand = commandData.sub_commands[i];
+            console.log(`Executing sub-command ${i + 1}/${commandData.sub_commands.length}:`, subCommand.command_id);
+            
             // 引数の解決
             const arg = this.resolveArgument(parentCommand, subCommand.arg);
+            console.log('Resolved arg:', arg);
             
             // サブコマンドオブジェクトを構築
             const resolvedSubCommand = {
@@ -103,15 +142,23 @@ class CommandEvaluator {
                 arg3: null
             };
 
-            const result = this.executeCommand(actor, resolvedSubCommand, target);
+            // サブコマンド実行時は、すでに設定されたselectedTargetを優先
+            const targetForSubCommand = this.selectedTarget || target;
+            console.log('Target for sub-command:', targetForSubCommand?.name);
+            
+            const result = this.executeCommand(actor, resolvedSubCommand, targetForSubCommand);
+            console.log(`Sub-command ${i + 1} result:`, { success: result.success, message: result.message });
+            
             results.push(result);
 
             // サブコマンドが失敗した場合は中断
             if (!result.success) {
+                console.log('Sub-command failed, aborting macro:', result.message);
                 return result;
             }
         }
 
+        console.log('Macro command completed successfully');
         return {
             success: true,
             message: results.map(r => r.message).filter(m => m).join('\n'),
@@ -133,6 +180,8 @@ class CommandEvaluator {
         const arg3 = command.arg3;
 
         // console.log(`基本command「${commandData.name}」評価`)
+
+        console.log(`執行基本コマンド: ${commandData.name}`);
 
         switch (commandData.name) {
             case '定数加算':
@@ -171,7 +220,11 @@ class CommandEvaluator {
             case 'メッセージ表示':
                 return this.executeShowMessage(arg1);
             
+            case 'ランダムターゲット設定':
+                return this.executeRandomTargetSelection();
+            
             default:
+                console.log(`未実装のコマンド: ${commandData.name}`);
                 return {
                     success: false,
                     message: `未実装のコマンド: ${commandData.name}`,
@@ -203,6 +256,8 @@ class CommandEvaluator {
     resetState() {
         this.register = 0;
         this.battleRules = {};
+        this.selectedTarget = null;
+        this.playerParty = null;
     }
 
     // ======== 基本コマンド実装 ========
@@ -254,14 +309,23 @@ class CommandEvaluator {
      * @param {Object} target - 対象
      */
     executeApplyAttack(actor, target) {
+        // 攻撃者の基本攻撃力にレジスタ値を加算してベースダメージを計算
+        const baseAttack = actor.attack || 0;
+        const baseDamage = baseAttack + this.register;
+        
+        // ターゲットが指定されていない場合は、selectedTargetを使用
+        const actualTarget = target || this.selectedTarget;
+        
+        console.log('executeApplyAttack:', { attacker: actor.name, target: actualTarget?.name, baseDamage });
+        
         return {
             success: true,
             message: null,
             effects: [{
                 type: 'attack',
                 attacker: actor,
-                target: target,
-                baseDamage: this.register,
+                target: actualTarget,
+                baseDamage: baseDamage,
                 battleRules: { ...this.battleRules }
             }]
         };
@@ -435,6 +499,50 @@ class CommandEvaluator {
         }
         
         return replacedMessage;
+    }
+    
+    /**
+     * ランダムターゲット設定コマンドを実行する
+     * @returns {Object} 実行結果
+     */
+    executeRandomTargetSelection() {
+        console.log('executeRandomTargetSelection called, playerParty:', this.playerParty ? this.playerParty.length : 'null');
+        
+        if (!this.playerParty || this.playerParty.length === 0) {
+            console.log('No playerParty available');
+            return {
+                success: false,
+                message: 'ターゲット選択用のプレイヤーパーティが設定されていません',
+                effects: []
+            };
+        }
+        
+        // 生存しているプレイヤーからランダムに選択
+        const alivePlayers = this.playerParty.filter(player => {
+            const alive = player && player.isAlive && player.isAlive();
+            console.log('Player alive check:', player?.name, alive);
+            return alive;
+        });
+        
+        console.log('Alive players count:', alivePlayers.length);
+        
+        if (alivePlayers.length === 0) {
+            return {
+                success: false,
+                message: '生存しているプレイヤーがいません',
+                effects: []
+            };
+        }
+        
+        // ランダムにターゲットを選択
+        this.selectedTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        console.log('Selected target:', this.selectedTarget.name);
+        
+        return {
+            success: true,
+            message: '', // メッセージは表示しない
+            effects: []
+        };
     }
 }
 

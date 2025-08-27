@@ -209,9 +209,6 @@ class TurnBasedBattleRule extends BattleRuleBase {
             case 'enemy_action':
                 this.executeEnemyAction(action);
                 break;
-            case 'enemy_attack_action':
-                this.executeEnemyAttackAction(action);
-                break;
             default:
                 console.warn(`不明な行動タイプ: ${action.type}`);
                 this.currentTurnIndex++;
@@ -294,7 +291,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
     }
     
     /**
-     * 敵のアクション（enemy_action）を実行する
+     * 敵のアクション（enemy_action）を実行する（統一処理版）
      * @param {Object} action - 敵のアクション
      */
     executeEnemyAction(action) {
@@ -303,7 +300,17 @@ class TurnBasedBattleRule extends BattleRuleBase {
         
         if (result.success) {
             this.showMessage(result.message);
+            
+            // ダメージや効果を適用
+            if (result.effects && result.effects.length > 0) {
+                result.effects.forEach(effect => {
+                    if (effect.type === 'damage' && effect.target) {
+                        this.showMessage(`${effect.target.name}に${effect.amount}のダメージ！`);
+                    }
+                });
+            }
         } else {
+            console.warn("アクション失敗", result);
             this.showMessage(`${action.actor.name}のアクションに失敗した！`);
         }
         
@@ -320,48 +327,6 @@ class TurnBasedBattleRule extends BattleRuleBase {
         }, 2000);
     }
 
-    /**
-     * 敵の攻撃アクション（enemy_attack_action）を実行する
-     * @param {Object} action - 敵の攻撃アクション
-     */
-    executeEnemyAttackAction(action) {
-        const { actor, target, actionId } = action;
-        
-        // ActionResolverを使用してコマンド評価による攻撃を解決
-        const result = this.actionResolver.resolveAction({
-            type: 'enemy_action', // ActionResolverには通常のenemyActionとして渡す
-            actor: actor,
-            target: target,
-            actionId: actionId
-        });
-        
-        if (result.success) {
-            this.showMessage(result.message);
-            
-            // 攻撃による効果（ダメージなど）を適用
-            if (result.effects && result.effects.length > 0) {
-                result.effects.forEach(effect => {
-                    if (effect.type === 'damage' && effect.target) {
-                        this.showMessage(`${effect.target.name}に${effect.amount}のダメージ！`);
-                    }
-                });
-            }
-        } else {
-            this.showMessage(`${actor.name}の攻撃に失敗した！`);
-        }
-        
-        // 勝敗判定
-        const battleResult = this.checkBattleResult();
-        if (battleResult) {
-            this.endBattle(battleResult);
-            return;
-        }
-        
-        setTimeout(() => {
-            this.currentTurnIndex++;
-            this.executeNextAction();
-        }, 2000);
-    }
 
     /**
      * 敵のターンを実行する（先攻時）

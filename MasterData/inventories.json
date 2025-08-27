@@ -68,8 +68,8 @@
     "price": "0",
     "commands": [
       {
-        "commands": "単純攻撃マクロ",
-        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "commands": "ランダム単純攻撃マクロ",
+        "command_id": "0f5a6d2a-7e6e-493b-87a4-2f8fa703c8c1",
         "arg1": "0",
         "arg2": null,
         "arg3": null
@@ -119,8 +119,8 @@
         "arg1": "2"
       },
       {
-        "commands": "単純攻撃マクロ",
-        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89",
+        "commands": "ランダム単純攻撃マクロ",
+        "command_id": "0f5a6d2a-7e6e-493b-87a4-2f8fa703c8c1",
         "arg1": "30",
         "arg2": "30"
       }

@@ -67,7 +67,7 @@
     "is_enemy": "TRUE",
     "hp": "30",
     "mp": "0",
-    "attack": "30",
+    "attack": "50",
     "deffence": "10",
     "agility": "10",
     "inventories": [
@@ -90,7 +90,7 @@
     "is_enemy": "TRUE",
     "hp": "40",
     "mp": "30",
-    "attack": "30",
+    "attack": "100",
     "deffence": "10",
     "agility": "8",
     "inventories": [
@@ -113,7 +113,7 @@
     "is_enemy": "TRUE",
     "hp": "20",
     "mp": "9",
-    "attack": "10",
+    "attack": "80",
     "deffence": "10",
     "agility": "6",
     "inventories": [

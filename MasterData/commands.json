@@ -19,6 +19,10 @@
     "name": "複数回攻撃ルール設定",
     "sub_commands": []
   },
+  "4c0d7d14-2fc2-4263-b2ba-f39d28f9f495": {
+    "name": "ランダムターゲット設定",
+    "sub_commands": []
+  },
   "23ca1336-358d-461b-8e74-20beebe59f98": {
     "name": "全体ターゲット設定",
     "sub_commands": []
@@ -109,6 +113,21 @@
         "sub_commands": "攻撃点ルール適用",
         "arg": null,
         "command_id": "34e0a3a6-641a-4602-9f93-3eadfcaa5df8"
+      }
+    ]
+  },
+  "0f5a6d2a-7e6e-493b-87a4-2f8fa703c8c1": {
+    "name": "ランダム単純攻撃マクロ",
+    "sub_commands": [
+      {
+        "sub_commands": "ランダムターゲット設定",
+        "arg": null,
+        "command_id": "4c0d7d14-2fc2-4263-b2ba-f39d28f9f495"
+      },
+      {
+        "sub_commands": "単純攻撃マクロ",
+        "arg": "arg1",
+        "command_id": "1c189a49-f917-41b3-9d31-445f88c17c89"
       }
     ]
   },

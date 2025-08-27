@@ -12,8 +12,8 @@ f30647ff-eedb-4c2b-bc43-0f2883055961	定数乗算	Multiply	Aレジスタをarg1�
 ・対象者の「防御力合計・バフデバフ状態」を加味
 ＋効果反映実行"
 d9d76f5b-a9a5-4493-aae6-a93126fdf8bd	複数回攻撃ルール設定	SetMultipleAttack	arg1の値で複数回攻撃ルールを設定
+45d03551-9956-4fd4-bde2-b94b58dc0a78	ランダムターゲット設定	SetRandomTarget	ランダムな相手をターゲットに設定する
 23ca1336-358d-461b-8e74-20beebe59f98	全体ターゲット設定	SetWholeTarget	効果対象を全体に設定する
-			
 9a46d8c2-6e5d-4330-9cc7-00c3e042a863	攻撃属性「火」設定	SetAttackAttributeFire	攻撃の属性を火に設定
 7519e60f-4e6b-4470-a47e-3c369819f900	MP評価	EvaluateMagicPoint	arg1のMPが足りてるか評価、足りていなければ中断、足りていれば消費して継続
 ec62a0e2-a713-40d6-8d99-749a755c6cd3	消費型アイテム評価	EvaluateConsumeQuantity	arg1のinventoryアイテム消費個数評価（通常は1を想定）、不足していれば中断、足りていれば消費して継続
