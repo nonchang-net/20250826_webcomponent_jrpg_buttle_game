@@ -20,7 +20,7 @@
     "sub_commands": []
   },
   "23ca1336-358d-461b-8e74-20beebe59f98": {
-    "name": "全体攻撃ルール設定",
+    "name": "全体ターゲット設定",
     "sub_commands": []
   },
   "9a46d8c2-6e5d-4330-9cc7-00c3e042a863": {
@@ -126,9 +126,7 @@
         "command_id": "98cefa6c-a925-4f5b-95b3-90962ac31d42"
       },
       {
-        "sub_commands": "全体攻撃ルール設定",
-        "arg": null,
-        "command_id": "23ca1336-358d-461b-8e74-20beebe59f98"
+        "sub_commands": "全体攻撃ルール設定"
       },
       {
         "sub_commands": "攻撃点ルール適用",
