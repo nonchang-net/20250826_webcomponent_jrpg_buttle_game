@@ -58,6 +58,8 @@ class CommandEvaluator {
      * @returns {Object} 実行結果
      */
     executeCommand(actor, command, target) {
+        // 現在のactorを保存（メッセージ表示で使用）
+        this.currentActor = actor;
         const commandId = command.command_id;
         const commandData = this.commandsData[commandId];
 
@@ -403,13 +405,36 @@ class CommandEvaluator {
         }
         
         // ロケールに応じたメッセージを取得
-        const localizedMessage = messageData[this.locale] || messageData.name || messageId;
+        let localizedMessage = messageData[this.locale] || messageData.name || messageId;
+        
+        // トークン置換を実行
+        localizedMessage = this.replaceMessageTokens(localizedMessage);
         
         return {
             success: true,
             message: localizedMessage,
             effects: []
         };
+    }
+    
+    /**
+     * メッセージ内のトークンを置換する
+     * @param {string} message - 元のメッセージ
+     * @returns {string} トークン置換後のメッセージ
+     */
+    replaceMessageTokens(message) {
+        if (!message || typeof message !== 'string') {
+            return message;
+        }
+        
+        let replacedMessage = message;
+        
+        // {actor}トークンを行動者の名前で置換
+        if (this.currentActor && this.currentActor.name) {
+            replacedMessage = replacedMessage.replace(/\{actor\}/g, this.currentActor.name);
+        }
+        
+        return replacedMessage;
     }
 }
 
