@@ -19,7 +19,7 @@ class ActionResolver {
      * @returns {Object} 実行結果
      */
     resolveAction(action) {
-        if (!this.isActorAlive(action.actor)) {
+        if (!action.actor.isAlive()) {
             return {
                 success: false,
                 message: `${action.actor.name}は行動不能です。`,
@@ -56,7 +56,7 @@ class ActionResolver {
         const attacker = action.actor;
         const target = action.target;
 
-        if (!this.isActorAlive(target)) {
+        if (!target.isAlive()) {
             return {
                 success: false,
                 message: `${attacker.name}の攻撃！しかし${target.name}はすでに倒れている！`,
@@ -78,7 +78,7 @@ class ActionResolver {
 
         // 指定回数分の攻撃を実行
         for (let i = 0; i < multipleAttackCount; i++) {
-            if (!this.isActorAlive(target)) {
+            if (!target.isAlive()) {
                 break; // 対象が倒れた場合は攻撃を中断
             }
 
@@ -103,7 +103,7 @@ class ActionResolver {
 
             // 攻撃メッセージ
             if (multipleAttackCount > 1) {
-                messages.push(`${attacker.name}の${i + 1}回目の攻撃！${target.name}に${actualDamage}のダメージ！`);
+                messages.push(`${attacker.name}の${i + 1}回目の攻撃！${target.name}に${actualDamage}のダメージ！\n`);
             } else {
                 messages.push(`${attacker.name}の攻撃！${target.name}に${actualDamage}のダメージ！`);
             }
@@ -174,6 +174,7 @@ class ActionResolver {
 
     /**
      * 魔法行動を実行する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
      * @param {Object} action - 魔法行動
      * @returns {Object} 実行結果
      */
@@ -217,6 +218,7 @@ class ActionResolver {
 
     /**
      * 魔法効果を解決する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
      * @param {Object} caster - 術者
      * @param {Object} target - 対象
      * @param {Object} spellData - 魔法データ
@@ -289,6 +291,7 @@ class ActionResolver {
 
     /**
      * アイテム使用行動を実行する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} action - アイテム使用行動
      * @returns {Object} 実行結果
      */
@@ -319,6 +322,7 @@ class ActionResolver {
 
     /**
      * アイテム効果を解決する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
      * @param {Object} user - 使用者
      * @param {Object} target - 対象
      * @param {Object} itemData - アイテムデータ
@@ -358,11 +362,11 @@ class ActionResolver {
 
     /**
      * 魔法のMP消費量を取得する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} spellData - 魔法データ
      * @returns {number} MP消費量
      */
     getMagicMpCost(spellData) {
-        // TODO: マスターデータにMP消費量を追加
         if (spellData.name.includes('回復')) {
             return spellData.name.includes('小') ? 3 : spellData.name.includes('大') ? 10 : 5;
         }
@@ -371,6 +375,7 @@ class ActionResolver {
 
     /**
      * 回復量を計算する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} _caster - 術者（将来拡張用）
      * @param {Object} spellData - 魔法データ
      * @returns {number} 回復量
@@ -383,6 +388,7 @@ class ActionResolver {
 
     /**
      * 魔法ダメージを計算する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} _caster - 術者（将来拡張用）
      * @param {Object} _target - 対象（将来拡張用）
      * @param {Object} _spellData - 魔法データ（将来拡張用）
@@ -396,6 +402,7 @@ class ActionResolver {
 
     /**
      * アイテム回復量を計算する
+     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} itemData - アイテムデータ
      * @returns {number} 回復量
      */
@@ -406,7 +413,7 @@ class ActionResolver {
     }
 
     /**
-     * 敵のアクション（action type）を実行する
+     * 敵のアクションを実行する
      * @param {Object} action - 敵のアクション
      * @returns {Object} 実行結果
      */
@@ -483,14 +490,6 @@ class ActionResolver {
     }
 
 
-    /**
-     * アクターが生存しているかチェック
-     * @param {Object} actor - アクター
-     * @returns {boolean} 生存しているかどうか
-     */
-    isActorAlive(actor) {
-        return actor && actor.isAlive && actor.isAlive();
-    }
 }
 
 /**

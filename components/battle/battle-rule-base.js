@@ -111,14 +111,6 @@ class BattleRuleBase {
         });
     }
 
-    /**
-     * アクターが行動可能かどうかを判定する
-     * @param {Object} actor - アクター
-     * @returns {boolean} 行動可能かどうか
-     */
-    isActorAlive(actor) {
-        return actor.currentHp > 0;
-    }
 
     /**
      * パーティ全体が全滅しているかを判定する
@@ -126,7 +118,7 @@ class BattleRuleBase {
      * @returns {boolean} 全滅しているかどうか
      */
     isPartyDefeated(party) {
-        return party.every(actor => !this.isActorAlive(actor));
+        return party.every(actor => !actor.isAlive());
     }
 }
 

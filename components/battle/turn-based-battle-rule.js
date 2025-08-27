@@ -64,7 +64,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * 次のプレイヤーの行動選択を促す
      */
     selectNextPlayerAction() {
-        const alivePlayersCount = this.playerParty.filter(p => this.isActorAlive(p)).length;
+        const alivePlayersCount = this.playerParty.filter(p => p.isAlive()).length;
         
         if (this.currentPlayerIndex >= alivePlayersCount) {
             // 全員の行動が決定したので、ターン実行へ
@@ -142,7 +142,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
         
         // プレイヤーアクション
         this.playerActions.forEach(action => {
-            if (action && this.isActorAlive(action.actor)) {
+            if (action && action.actor.isAlive()) {
                 const speed = action.actor.agility + Math.floor(Math.random() * 10);
                 allActions.push({
                     ...action,
@@ -153,7 +153,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
 
         // 敵のアクション（AI）
         this.enemyParty.forEach(enemy => {
-            if (this.isActorAlive(enemy)) {
+            if (enemy.isAlive()) {
                 const action = enemy.generateAction(this.playerParty);
                 const speed = enemy.agility + Math.floor(Math.random() * 10);
                 allActions.push({
@@ -187,7 +187,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - 実行する行動
      */
     executeAction(action) {
-        if (!this.isActorAlive(action.actor)) {
+        if (!action.actor.isAlive()) {
             this.currentTurnIndex++;
             this.executeNextAction();
             return;
@@ -341,7 +341,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      */
     generateEnemyTurnOrder() {
         this.turnOrder = this.enemyParty
-            .filter(enemy => this.isActorAlive(enemy))
+            .filter(enemy => enemy.isAlive())
             .map(enemy => {
                 const action = enemy.generateAction(this.playerParty);
                 const speed = enemy.agility + Math.floor(Math.random() * 10);
@@ -372,8 +372,8 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @returns {string|null} 'victory', 'defeat', または null
      */
     checkBattleResult() {
-        const aliveEnemies = this.enemyParty.filter(e => this.isActorAlive(e));
-        const alivePlayers = this.playerParty.filter(p => this.isActorAlive(p));
+        const aliveEnemies = this.enemyParty.filter(e => e.isAlive());
+        const alivePlayers = this.playerParty.filter(p => p.isAlive());
 
         if (aliveEnemies.length === 0) {
             return 'victory';
@@ -427,7 +427,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @returns {Object|null} プレイヤーオブジェクト
      */
     getAlivePlayerByIndex(index) {
-        const alivePlayers = this.playerParty.filter(p => this.isActorAlive(p));
+        const alivePlayers = this.playerParty.filter(p => p.isAlive());
         return alivePlayers[index] || null;
     }
 }

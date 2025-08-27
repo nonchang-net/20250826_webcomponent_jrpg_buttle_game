@@ -34,7 +34,7 @@ class Enemy extends Actor {
         
         if (availableActions.length === 0) {
             // アクションが無い場合は基本攻撃
-            const alivePlayers = playerParty.filter(p => this.isActorAlive(p));
+            const alivePlayers = playerParty.filter(p => p.isAlive());
             const target = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
             
             return {
