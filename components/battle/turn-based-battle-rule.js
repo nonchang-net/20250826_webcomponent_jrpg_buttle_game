@@ -40,13 +40,13 @@ class TurnBasedBattleRule extends BattleRuleBase {
         
         if (isEnemyFirst) {
             // 1a: 敵先攻
-            this.showMessage('魔物の群れが現れた！ 魔物の群れは、こちらが身構える前に襲いかかってきた！');
+            this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears'));
             setTimeout(() => {
                 this.executeEnemyTurn();
             }, 2000);
         } else {
             // 1b: プレイヤー先攻
-            this.showMessage('魔物の群れが現れた！ コマンド？');
+            this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
             setTimeout(() => {
                 this.startPlayerActionSelection();
             }, 2000);
@@ -77,8 +77,6 @@ class TurnBasedBattleRule extends BattleRuleBase {
 
         const currentPlayer = this.getAlivePlayerByIndex(this.currentPlayerIndex);
         if (currentPlayer) {
-            this.showMessage(`${currentPlayer.name}の行動を選択してください`);
-            
             // UI更新: 現在選択中のプレイヤーを通知
             if (this.uiUpdateCallback) {
                 this.uiUpdateCallback('player_selection', {
