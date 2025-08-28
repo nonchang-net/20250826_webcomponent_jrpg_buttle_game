@@ -114,14 +114,32 @@ class BattleSceneDisplay {
                 // プレイヤー行動選択フェーズ
                 // console.log('プレイヤー選択UI更新:', data.currentPlayer ? data.currentPlayer.name : 'null'); // DEBUG
                 // ここではメッセージを重複追加しない（TurnBasedBattleRuleで既に表示済み）
+                
+                // 行動選択中のプレイヤーをハイライト
+                if (this.partyStatus) {
+                    this.partyStatus.setActivePlayer(data.currentPlayer);
+                }
                 break;
             
             case 'battle_end':
                 // バトル終了
                 // console.log('バトル終了UI更新:', data.result); // DEBUG
                 this.handleBattleEnd(data.result);
+                
+                // ハイライトをリセット
+                if (this.partyStatus) {
+                    this.partyStatus.setActivePlayer(null);
+                }
                 break;
             
+            case 'action_execution':
+            case 'turn_end':
+                // アクション実行時やターン終了時はハイライトをリセット
+                if (this.partyStatus) {
+                    this.partyStatus.setActivePlayer(null);
+                }
+                break;
+                
             default:
                 // console.log('Battle UI Update:', type, data); // DEBUG
                 break;

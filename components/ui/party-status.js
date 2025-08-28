@@ -6,6 +6,7 @@ class PartyStatus extends HTMLElement {
     constructor() {
         super();
         this.partyMembers = [];
+        this.activePlayerIndex = -1;
         this.setupComponent();
     }
 
@@ -43,6 +44,17 @@ class PartyStatus extends HTMLElement {
                 .party-member.weakened {
                     border-left-color: #FFA500;
                     background: rgba(255, 165, 0, 0.2);
+                }
+
+                .party-member.active-turn {
+                    border-bottom: 3px dashed #4CAF50;
+                    animation: activeTurn 2s ease-in-out infinite;
+                }
+
+                @keyframes activeTurn {
+                    0% { border-bottom-color: #4CAF50; }
+                    50% { border-bottom-color: #81C784; }
+                    100% { border-bottom-color: #4CAF50; }
                 }
 
                 .party-member.defeated {
@@ -235,6 +247,11 @@ class PartyStatus extends HTMLElement {
                 memberElement.classList.add('weakened');
             }
             
+            // 行動選択中のプレイヤーをハイライト
+            if (index === this.activePlayerIndex) {
+                memberElement.classList.add('active-turn');
+            }
+            
             
             container.appendChild(memberElement);
         });
@@ -314,6 +331,22 @@ class PartyStatus extends HTMLElement {
      */
     getAliveCount() {
         return this.partyMembers.filter(member => member.currentHp > 0).length;
+    }
+
+    /**
+     * 行動選択中のプレイヤーを設定する
+     * @param {Object} activePlayer - 行動選択中のプレイヤー（nullの場合は全てのハイライトを解除）
+     */
+    setActivePlayer(activePlayer) {
+        if (activePlayer) {
+            // プレイヤーIDまたは名前でインデックスを特定
+            this.activePlayerIndex = this.partyMembers.findIndex(member => 
+                member.id === activePlayer.id || member.name === activePlayer.name
+            );
+        } else {
+            this.activePlayerIndex = -1;
+        }
+        this.render();
     }
 
 }
