@@ -11,6 +11,7 @@ class ActionResolver {
         this.locale = locale;
         this.damageCalculator = new DamageCalculator(actors, inventories);
         this.commandEvaluator = new CommandEvaluator(commandsData, inventories, messages, locale);
+        this.messageManager = new MessageManager(locale);
     }
 
     /**
@@ -22,7 +23,7 @@ class ActionResolver {
         if (!action.actor.isAlive()) {
             return {
                 success: false,
-                message: `${action.actor.name}は行動不能です。`,
+                message: this.messageManager.buildErrorMessage('actor_unable_to_act', { actor: action.actor }),
                 effects: []
             };
         }
@@ -41,7 +42,7 @@ class ActionResolver {
             default:
                 return {
                     success: false,
-                    message: `不明な行動: ${action.type}`,
+                    message: this.messageManager.buildErrorMessage('unknown_action', { actionType: action.type }),
                     effects: []
                 };
         }
@@ -59,7 +60,7 @@ class ActionResolver {
         if (!target.isAlive()) {
             return {
                 success: false,
-                message: `${attacker.name}の攻撃！しかし${target.name}はすでに倒れている！`,
+                message: this.messageManager.buildErrorMessage('target_already_defeated', { attacker: attacker, target: target }),
                 effects: []
             };
         }
@@ -73,7 +74,6 @@ class ActionResolver {
         const multipleAttackCount = weaponEffect.battleRules?.multipleAttack || 1;
         
         const allEffects = [];
-        const messages = [];
         let totalDamage = 0;
 
         // 指定回数分の攻撃を実行
@@ -101,16 +101,8 @@ class ActionResolver {
                 totalAttacks: multipleAttackCount
             });
 
-            // 攻撃メッセージ
-            if (multipleAttackCount > 1) {
-                messages.push(`${attacker.name}の${i + 1}回目の攻撃！${target.name}に${actualDamage}のダメージ！\n`);
-            } else {
-                messages.push(`${attacker.name}の攻撃！${target.name}に${actualDamage}のダメージ！`);
-            }
-
             // 対象が倒れた場合
             if (target.currentHp <= 0) {
-                messages.push(`${target.name}は倒れた！`);
                 allEffects.push({
                     type: 'defeat',
                     target: target
@@ -119,16 +111,16 @@ class ActionResolver {
             }
         }
 
-        // 複数回攻撃の場合は総ダメージも表示
-        let finalMessage = messages.join('\n');
-        if (multipleAttackCount > 1) {
-            finalMessage += `\n総ダメージ: ${totalDamage}`;
-        }
-
         return {
             success: true,
-            message: finalMessage,
-            effects: allEffects
+            effects: allEffects,
+            actionData: {
+                type: 'attack',
+                attacker: attacker,
+                target: target,
+                totalDamage: totalDamage,
+                multipleAttack: multipleAttackCount > 1
+            }
         };
     }
 
@@ -162,13 +154,16 @@ class ActionResolver {
 
         return {
             success: true,
-            message: `${defender.name}は身を守っている！`,
             effects: [
                 {
                     type: 'defend',
                     target: defender
                 }
-            ]
+            ],
+            actionData: {
+                type: 'defend',
+                actor: defender
+            }
         };
     }
 
@@ -185,7 +180,7 @@ class ActionResolver {
         if (!spellId) {
             return {
                 success: false,
-                message: `${caster.name}の魔法詠唱に失敗しました。`,
+                message: this.messageManager.buildErrorMessage('action_failed', { actor: caster, actionName: '魔法詠唱' }),
                 effects: []
             };
         }
@@ -194,7 +189,7 @@ class ActionResolver {
         if (!spellData) {
             return {
                 success: false,
-                message: `不明な魔法: ${spellId}`,
+                message: this.messageManager.buildErrorMessage('spell_not_found', { spellId: spellId }),
                 effects: []
             };
         }
@@ -204,7 +199,7 @@ class ActionResolver {
         if (caster.currentMp < mpCost) {
             return {
                 success: false,
-                message: `${caster.name}のMPが足りません。`,
+                message: this.messageManager.buildErrorMessage('mp_insufficient', { caster: caster }),
                 effects: []
             };
         }
@@ -244,8 +239,13 @@ class ActionResolver {
 
             return {
                 success: true,
-                message: `${caster.name}は${spellData.name}を唱えた！${target.name}のHPが${actualHeal}回復した！`,
-                effects: effects
+                effects: effects,
+                actionData: {
+                    type: 'magic',
+                    caster: caster,
+                    spell: spellData,
+                    target: target
+                }
             };
         }
         
@@ -264,10 +264,7 @@ class ActionResolver {
                 newHp: target.currentHp
             });
 
-            let message = `${caster.name}は${spellData.name}を唱えた！${target.name}に${actualDamage}のダメージ！`;
-            
             if (target.currentHp <= 0) {
-                message += `\n${target.name}は倒れた！`;
                 effects.push({
                     type: 'defeat',
                     target: target
@@ -276,16 +273,26 @@ class ActionResolver {
 
             return {
                 success: true,
-                message: message,
-                effects: effects
+                effects: effects,
+                actionData: {
+                    type: 'magic',
+                    caster: caster,
+                    spell: spellData,
+                    target: target
+                }
             };
         }
 
         // その他の魔法
         return {
             success: true,
-            message: `${caster.name}は${spellData.name}を唱えた！`,
-            effects: effects
+            effects: effects,
+            actionData: {
+                type: 'magic',
+                caster: caster,
+                spell: spellData,
+                target: target
+            }
         };
     }
 
@@ -302,7 +309,7 @@ class ActionResolver {
         if (!itemId) {
             return {
                 success: false,
-                message: `${user.name}のアイテム使用に失敗しました。`,
+                message: this.messageManager.buildErrorMessage('action_failed', { actor: user, actionName: 'アイテム使用' }),
                 effects: []
             };
         }
@@ -311,7 +318,7 @@ class ActionResolver {
         if (!itemData) {
             return {
                 success: false,
-                message: `不明なアイテム: ${itemId}`,
+                message: this.messageManager.buildErrorMessage('item_not_found', { itemId: itemId }),
                 effects: []
             };
         }
@@ -348,15 +355,25 @@ class ActionResolver {
 
             return {
                 success: true,
-                message: `${user.name}は${itemData.name}を使った！${target.name}のHPが${actualHeal}回復した！`,
-                effects: effects
+                effects: effects,
+                actionData: {
+                    type: 'item',
+                    user: user,
+                    item: itemData,
+                    target: target
+                }
             };
         }
 
         return {
             success: true,
-            message: `${user.name}は${itemData.name}を使った！`,
-            effects: effects
+            effects: effects,
+            actionData: {
+                type: 'item',
+                user: user,
+                item: itemData,
+                target: target
+            }
         };
     }
 
@@ -429,7 +446,7 @@ class ActionResolver {
             console.error('actionData not found:', actionId);
             return {
                 success: false,
-                message: `不明なアクション: ${actionId}`,
+                message: this.messageManager.buildErrorMessage('unknown_action', { actionType: actionId }),
                 effects: []
             };
         }
@@ -475,17 +492,27 @@ class ActionResolver {
             
             return {
                 success: result.success,
-                message: result.message || `${actor.name}は${actionData.name}！`,
                 effects: [...(result.effects || []), ...effects],
-                finalTarget: targetFromEvaluator // 最終的なターゲット情報
+                finalTarget: targetFromEvaluator, // 最終的なターゲット情報
+                actionData: {
+                    type: 'enemy_action',
+                    actor: actor,
+                    action: actionData,
+                    target: targetFromEvaluator
+                }
             };
         }
         
         // コマンドが設定されていない場合はデフォルトメッセージ
         return {
             success: true,
-            message: `${actor.name}は${actionData.name}！`,
-            effects: []
+            effects: [],
+            actionData: {
+                type: 'enemy_action',
+                actor: actor,
+                action: actionData,
+                target: null
+            }
         };
     }
 

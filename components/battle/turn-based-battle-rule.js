@@ -15,6 +15,9 @@ class TurnBasedBattleRule extends BattleRuleBase {
         
         // 行動キャンセル履歴
         this.actionHistory = [];
+        
+        // メッセージマネージャー
+        this.messageManager = new MessageManager(locale);
     }
 
     /**
@@ -226,9 +229,15 @@ class TurnBasedBattleRule extends BattleRuleBase {
         const result = this.actionResolver.resolveAction(action);
         
         if (result.success) {
-            this.showMessage(result.message);
+            // MessageManagerを使ってメッセージを構築
+            const message = this.messageManager.buildAttackMessage(
+                result, 
+                action.actor.name, 
+                action.target.name
+            );
+            this.showMessage(message);
         } else {
-            this.showMessage(result.message || `${action.actor.name}の攻撃が失敗しました`);
+            this.showMessage(result.message || this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: '攻撃' }));
         }
 
         setTimeout(() => {
@@ -299,19 +308,16 @@ class TurnBasedBattleRule extends BattleRuleBase {
         const result = this.actionResolver.resolveAction(action);
         
         if (result.success) {
-            this.showMessage(result.message);
-            
-            // ダメージや効果を適用
-            if (result.effects && result.effects.length > 0) {
-                result.effects.forEach(effect => {
-                    if (effect.type === 'damage' && effect.target) {
-                        this.showMessage(`${effect.target.name}に${effect.amount}のダメージ！`);
-                    }
-                });
-            }
+            // MessageManagerを使ってメッセージを構築
+            const message = this.messageManager.buildEnemyActionMessage(
+                result,
+                action.actor.name,
+                result.actionData?.action?.name || 'アクション'
+            );
+            this.showMessage(message);
         } else {
             console.warn("アクション失敗", result);
-            this.showMessage(`${action.actor.name}のアクションに失敗した！`);
+            this.showMessage(this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: 'アクション' }));
         }
         
         // 勝敗判定
