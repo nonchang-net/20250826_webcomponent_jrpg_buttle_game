@@ -349,11 +349,15 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - アイテム使用行動
      */
     executeItemAction(action) {
+        // アイテムIDからアイテムデータを取得
+        const itemData = this.inventories[action.params.itemId];
+        const itemName = itemData ? itemData.name : action.params.itemId;
+        
         // MessageManagerでアイテム使用メッセージを構築
         const itemMessage = this.messageManager.buildItemMessage({
             success: true,
             effects: []
-        }, action.actor.name, action.params.itemId);
+        }, action.actor.name, itemName, itemData);
         this.showMessage(itemMessage);
         
         setTimeout(() => {

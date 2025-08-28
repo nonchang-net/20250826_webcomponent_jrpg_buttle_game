@@ -226,9 +226,16 @@ class MessageManager {
      * @param {Object} actionResult - アクション実行結果
      * @param {string} userName - 使用者名
      * @param {string} itemName - アイテム名
+     * @param {Object} itemData - アイテムデータ（アイテムタイプ判定に使用）
      * @returns {string} アイテム使用メッセージ
      */
-    buildItemMessage(actionResult, userName, itemName) {
+    buildItemMessage(actionResult, userName, itemName, itemData = null) {
+        // 武器を道具として使用した場合の特別処理
+        // undone: 将来的に実装する際は「武器をアイテムとして使った場合の効果を定義する専用のinventoryマスター」の作成・実装が必要になる見込み。今回のサンプルでは実装しない。
+        if (itemData && itemData.type === 'weapon') {
+            return `${userName}は${itemName}を掲げた。しかし何も起こらなかった！`;
+        }
+        
         const messages = [`${userName}は${itemName}を使った！`];
         
         // 効果メッセージを追加
