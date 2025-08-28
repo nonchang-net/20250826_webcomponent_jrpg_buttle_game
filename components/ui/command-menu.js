@@ -9,8 +9,10 @@ class CommandMenu extends HTMLElement {
         this.selectedIndex = 0;
         this.itemSelectedIndex = 0; // 道具選択時の選択インデックス
         this.magicSelectedIndex = 0; // 魔法選択時の選択インデックス
+        this.targetSelectedIndex = 0; // ターゲット選択時の選択インデックス
         this.currentItems = []; // 現在表示中のアイテムリスト
         this.currentSpells = []; // 現在表示中の魔法リスト
+        this.currentTargets = []; // 現在表示中のターゲットリスト
         this.commands = [
             { id: 'fight', label: '戦う', enabled: true },
             { id: 'defend', label: '防御', enabled: true },
@@ -232,6 +234,12 @@ class CommandMenu extends HTMLElement {
                 .disabled-text {
                     color: #666;
                 }
+
+                .target-status {
+                    color: #90EE90;
+                    font-size: 12px;
+                    float: right;
+                }
             </style>
             
             <div class="menu-title" id="menu-title">コマンド選択</div>
@@ -285,33 +293,83 @@ class CommandMenu extends HTMLElement {
 
     /**
      * ターゲット選択モードを表示する
+     * @param {Array} targets - 攻撃可能なターゲットリスト
      */
-    showTargetSelection() {
+    showTargetSelection(targets = []) {
         this.currentMode = 'target';
+        // 戻るボタンも含めた選択可能リストを作成
+        this.currentTargets = [...targets, { id: '__back__', name: '戻る', isBackButton: true }];
+        this.targetSelectedIndex = 0;
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
         titleElement.textContent = 'ターゲット選択';
         
-        const instruction = document.createElement('div');
-        instruction.className = 'target-instruction';
-        instruction.textContent = '攻撃対象を選択してください';
+        const targetListContainer = document.createElement('div');
+        targetListContainer.className = 'selection-list';
         
-        const commandList = document.createElement('div');
-        commandList.className = 'command-list';
+        if (targets.length > 0) {
+            // ターゲットボタンを作成
+            targets.forEach((target, index) => {
+                const targetButton = document.createElement('button');
+                targetButton.className = 'selection-button';
+                targetButton.dataset.target = target.id;
+                targetButton.dataset.index = index;
+                
+                const targetName = document.createElement('span');
+                targetName.textContent = target.name;
+                
+                // HPバーや状態を表示する場合の拡張予定地
+                const targetStatus = document.createElement('span');
+                targetStatus.className = 'target-status';
+                if (target.currentHp !== undefined && target.maxHp !== undefined) {
+                    targetStatus.textContent = `HP:${target.currentHp}/${target.maxHp}`;
+                }
+                
+                targetButton.appendChild(targetName);
+                if (targetStatus.textContent) {
+                    targetButton.appendChild(targetStatus);
+                }
+                
+                if (index === this.targetSelectedIndex) {
+                    targetButton.classList.add('selected');
+                }
+                
+                targetButton.addEventListener('click', () => {
+                    this.targetSelectedIndex = index;
+                    this.updateTargetSelection();
+                    this.selectTarget(target);
+                });
+                
+                targetListContainer.appendChild(targetButton);
+            });
+        } else {
+            const emptyMessage = document.createElement('div');
+            emptyMessage.style.cssText = 'color: #666; text-align: center; padding: 20px;';
+            emptyMessage.textContent = '攻撃可能なターゲットがありません';
+            targetListContainer.appendChild(emptyMessage);
+        }
         
+        // 戻るボタンをターゲット一覧の末尾に追加
         const backButton = document.createElement('button');
-        backButton.className = 'back-button command-button';
+        backButton.className = 'selection-button back-style';
+        backButton.dataset.index = targets.length;
         backButton.textContent = '戻る';
+        
+        if (targets.length === this.targetSelectedIndex) {
+            backButton.classList.add('selected');
+        }
+        
         backButton.addEventListener('click', () => {
+            this.targetSelectedIndex = targets.length;
+            this.updateTargetSelection();
             this.showMainMenu();
         });
         
-        commandList.appendChild(backButton);
+        targetListContainer.appendChild(backButton);
         
         contentElement.innerHTML = '';
-        contentElement.appendChild(instruction);
-        contentElement.appendChild(commandList);
+        contentElement.appendChild(targetListContainer);
     }
 
     /**
@@ -589,8 +647,8 @@ class CommandMenu extends HTMLElement {
      */
     setupKeyboardControls() {
         document.addEventListener('keydown', (event) => {
-            // メインメニュー、道具選択、魔法選択メニュー時にキー操作を有効にする
-            if (!['main', 'item', 'magic'].includes(this.currentMode)) return;
+            // メインメニュー、道具選択、魔法選択、ターゲット選択メニュー時にキー操作を有効にする
+            if (!['main', 'item', 'magic', 'target'].includes(this.currentMode)) return;
 
             switch (event.key) {
                 case 'ArrowUp':
@@ -601,6 +659,8 @@ class CommandMenu extends HTMLElement {
                         this.moveItemSelection(-1);
                     } else if (this.currentMode === 'magic') {
                         this.moveMagicSelection(-1);
+                    } else if (this.currentMode === 'target') {
+                        this.moveTargetSelection(-1);
                     }
                     break;
                 case 'ArrowDown':
@@ -611,6 +671,8 @@ class CommandMenu extends HTMLElement {
                         this.moveItemSelection(1);
                     } else if (this.currentMode === 'magic') {
                         this.moveMagicSelection(1);
+                    } else if (this.currentMode === 'target') {
+                        this.moveTargetSelection(1);
                     }
                     break;
                 case 'Enter':
@@ -622,6 +684,8 @@ class CommandMenu extends HTMLElement {
                         this.executeSelectedItem();
                     } else if (this.currentMode === 'magic') {
                         this.executeSelectedSpell();
+                    } else if (this.currentMode === 'target') {
+                        this.executeSelectedTarget();
                     }
                     break;
                 case 'Escape':
@@ -744,12 +808,59 @@ class CommandMenu extends HTMLElement {
     }
 
     /**
+     * ターゲット選択を移動する
+     * @param {number} direction - 移動方向（-1: 上, 1: 下）
+     */
+    moveTargetSelection(direction) {
+        if (this.currentTargets.length === 0) return;
+        
+        this.targetSelectedIndex = (this.targetSelectedIndex + direction + this.currentTargets.length) % this.currentTargets.length;
+        this.updateTargetSelection();
+    }
+
+    /**
+     * ターゲット選択状態を更新する
+     */
+    updateTargetSelection() {
+        const buttons = this.querySelectorAll('.selection-button');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('selected', index === this.targetSelectedIndex);
+        });
+    }
+
+    /**
+     * 選択されたターゲットを実行する
+     */
+    executeSelectedTarget() {
+        if (this.currentTargets.length > 0 && this.currentTargets[this.targetSelectedIndex]) {
+            const selectedTarget = this.currentTargets[this.targetSelectedIndex];
+            if (selectedTarget.isBackButton) {
+                this.showMainMenu();
+            } else {
+                this.selectTarget(selectedTarget);
+            }
+        }
+    }
+
+    /**
+     * ターゲット選択（親から呼ばれるメソッド）
+     * @param {Object} target - 選択されたターゲット
+     */
+    selectTarget(target) {
+        this.dispatchEvent(new CustomEvent('target-selected', {
+            detail: { target: target },
+            bubbles: true
+        }));
+    }
+
+    /**
      * 選択インデックスをリセットする
      */
     resetSelection() {
         this.selectedIndex = 0;
         this.itemSelectedIndex = 0;
         this.magicSelectedIndex = 0;
+        this.targetSelectedIndex = 0;
         this.updateSelection();
     }
 }

@@ -170,7 +170,7 @@ class BattleScene extends HTMLElement {
             await this.handleCommand(event.detail.command);
         });
         
-        // 敵選択イベント
+        // 敵選択イベント（既存のenemy-displayコンポーネント用）
         this.addEventListener('enemy-selected', async (event) => {
             const selectedEnemy = event.detail.enemy;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
@@ -178,6 +178,17 @@ class BattleScene extends HTMLElement {
             if (this.battleFlowController && currentPlayer) {
                 // 攻撃行動をBattleFlowControllerに設定
                 await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedEnemy);
+            }
+        });
+        
+        // ターゲット選択イベント（新しいコマンドメニュー用）
+        this.addEventListener('target-selected', async (event) => {
+            const selectedTarget = event.detail.target;
+            const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
+            
+            if (this.battleFlowController && currentPlayer) {
+                // 攻撃行動をBattleFlowControllerに設定
+                await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedTarget);
             }
         });
         
@@ -236,9 +247,10 @@ class BattleScene extends HTMLElement {
 
         switch(command) {
             case 'fight':
-                // ターゲット選択画面を表示
+                // 生存している敵のリストを取得してターゲット選択画面を表示
                 if (this.display && this.display.commandMenu) {
-                    this.display.commandMenu.showTargetSelection();
+                    const aliveEnemies = this.enemyParty.filter(enemy => enemy.currentHp > 0);
+                    this.display.commandMenu.showTargetSelection(aliveEnemies);
                 }
                 break;
                 
