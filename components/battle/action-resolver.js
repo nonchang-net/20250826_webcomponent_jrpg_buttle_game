@@ -471,7 +471,7 @@ class ActionResolver {
                     attackEffects.forEach(attackEffect => {
                         // ダメージ計算：基本ダメージから対象の防御力を引く
                         const baseDamage = attackEffect.baseDamage || 0;
-                        const targetDefence = targetFromEvaluator.deffence || 0; // 注意：スペルミス対応
+                        const targetDefence = targetFromEvaluator.defence || 0;
                         const finalDamage = Math.max(1, baseDamage - targetDefence);
                         
                         //console.log('damage calculation:', { baseDamage, targetDefence, finalDamage });

@@ -5,7 +5,7 @@
     "hp": "100",
     "mp": "50",
     "attack": "40",
-    "deffence": "10",
+    "defence": "10",
     "agility": "10",
     "inventories": [
       {
@@ -28,7 +28,7 @@
     "hp": "120",
     "mp": "0",
     "attack": "50",
-    "deffence": "10",
+    "defence": "10",
     "agility": "8",
     "inventories": [
       {
@@ -51,7 +51,7 @@
     "hp": "80",
     "mp": "100",
     "attack": "10",
-    "deffence": "10",
+    "defence": "10",
     "agility": "6",
     "inventories": [
       {
@@ -68,7 +68,7 @@
     "hp": "30",
     "mp": "0",
     "attack": "50",
-    "deffence": "10",
+    "defence": "10",
     "agility": "10",
     "inventories": [
       {
@@ -91,7 +91,7 @@
     "hp": "40",
     "mp": "30",
     "attack": "100",
-    "deffence": "10",
+    "defence": "10",
     "agility": "8",
     "inventories": [
       {
@@ -114,7 +114,7 @@
     "hp": "20",
     "mp": "9",
     "attack": "80",
-    "deffence": "10",
+    "defence": "10",
     "agility": "6",
     "inventories": [
       {

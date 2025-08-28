@@ -50,7 +50,7 @@ class Actor {
      * @returns {number} 防御力
      */
     getDefence() {
-        return parseInt(this.actorData.deffence) || 0;
+        return parseInt(this.actorData.defence) || 0;
     }
 
     /**
