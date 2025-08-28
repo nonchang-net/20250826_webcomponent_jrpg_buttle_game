@@ -145,35 +145,6 @@ class BattleSceneDisplay {
         }, 2000);
     }
 
-    /**
-     * 攻撃アクションの視覚演出を実行する
-     * @param {Object} attacker - 攻撃者
-     * @param {Array} enemyParty - 敵パーティ
-     * @param {number} damage - ダメージ量
-     */
-    performAttackAnimation(attacker, enemyParty, damage = 30) {
-        // 最初の敵にダメージ演出
-        if (enemyParty.length > 0 && this.enemyDisplay) {
-            this.enemyDisplay.playDamageAnimation(0);
-            
-            // 攻撃メッセージを表示
-            this.messageDisplay.showBattleEvent('attack', {
-                attacker: attacker.name,
-                target: enemyParty[0].name,
-                damage: damage
-            });
-            
-            // ダメージ処理
-            setTimeout(() => {
-                const currentHp = parseInt(enemyParty[0].currentHp || enemyParty[0].hp);
-                const newHp = Math.max(0, currentHp - damage);
-                this.enemyDisplay.updateEnemyHp(0, newHp);
-                
-                // 敵が倒れた場合のメッセージ
-                if (newHp <= 0) {
-                    this.messageDisplay.addMessage(`${enemyParty[0].name}を倒した！`);
-                }
-            }, 250);
-        }
-    }
+    // 古いテスト用メソッド - performAttackAnimation は削除済み
+    // バトルメッセージは全てMessageManager経由で統一的に処理される
 }

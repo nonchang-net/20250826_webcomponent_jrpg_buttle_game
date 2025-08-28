@@ -289,42 +289,6 @@ class MessageDisplay extends HTMLElement {
         this.isDisplaying = false;
     }
 
-    /**
-     * 戦闘イベントメッセージを表示
-     * @param {string} eventType - イベントタイプ
-     * @param {Object} params - パラメータ
-     */
-    showBattleEvent(eventType, params = {}) {
-        let message = '';
-        
-        switch (eventType) {
-            case 'attack':
-                message = `${params.attacker}の攻撃！ ${params.target}に${params.damage}のダメージ！`;
-                break;
-            case 'magic':
-                message = `${params.caster}は${params.spell}を唱えた！`;
-                break;
-            case 'item':
-                message = `${params.user}は${params.item}を使った！`;
-                break;
-            case 'escape':
-                message = 'パーティは逃げ出した！';
-                break;
-            case 'victory':
-                message = '敵を倒した！';
-                break;
-            case 'defeat':
-                message = 'パーティは全滅した...';
-                break;
-            case 'turn':
-                message = `${params.character}のターン！`;
-                break;
-            default:
-                message = params.text || 'システムメッセージ';
-        }
-        
-        this.addMessage(message);
-    }
 
     /**
      * テキスト速度を設定

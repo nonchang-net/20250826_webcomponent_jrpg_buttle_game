@@ -250,7 +250,12 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - 防御行動
      */
     executeDefendAction(action) {
-        this.showMessage(`${action.actor.name}は身を守っている！`);
+        // MessageManagerで防御メッセージを構築  
+        const defendMessage = this.messageManager.buildMessage({
+            success: true,
+            effects: [{ type: 'defend', target: action.actor }]
+        });
+        this.showMessage(defendMessage);
         
         setTimeout(() => {
             this.currentTurnIndex++;
@@ -269,9 +274,18 @@ class TurnBasedBattleRule extends BattleRuleBase {
             action.target.currentHp = Math.min(action.target.maxHp, action.target.currentHp + healAmount);
             action.actor.currentMp = Math.max(0, action.actor.currentMp - 5);
             
-            this.showMessage(`${action.actor.name}は${action.params.spellId}を唱えた！${action.target.name}のHPが${healAmount}回復した！`);
+            // MessageManagerで統一的にメッセージを構築
+            const healMessage = this.messageManager.buildMagicMessage({
+                success: true,
+                effects: [{ type: 'heal', amount: healAmount, target: action.target }]
+            }, action.actor.name, action.params.spellId);
+            this.showMessage(healMessage);
         } else {
-            this.showMessage(`${action.actor.name}は呪文を唱えた！`);
+            // MPが足りない場合のメッセージ
+            const failMessage = this.messageManager.buildErrorMessage('mp_insufficient', { 
+                caster: action.actor 
+            });
+            this.showMessage(failMessage);
         }
         
         setTimeout(() => {
@@ -285,7 +299,12 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - アイテム使用行動
      */
     executeItemAction(action) {
-        this.showMessage(`${action.actor.name}は${action.params.itemId}を使った！`);
+        // MessageManagerでアイテム使用メッセージを構築
+        const itemMessage = this.messageManager.buildItemMessage({
+            success: true,
+            effects: []
+        }, action.actor.name, action.params.itemId);
+        this.showMessage(itemMessage);
         
         setTimeout(() => {
             this.currentTurnIndex++;
@@ -391,11 +410,11 @@ class TurnBasedBattleRule extends BattleRuleBase {
     endBattle(result) {
         this.phase = 'battle_end';
         
-        if (result === 'victory') {
-            this.showMessage('勝利しました！');
-        } else {
-            this.showMessage('全滅しました...');
-        }
+        // MessageManagerでバトル結果メッセージを構築
+        const resultMessage = this.messageManager.buildBattleStatusMessage('battle_end', {
+            victory: result === 'victory'
+        });
+        this.showMessage(resultMessage);
 
         // UI更新: 再プレイボタンを表示
         if (this.uiUpdateCallback) {
