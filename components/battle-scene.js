@@ -126,6 +126,12 @@ class BattleScene extends HTMLElement {
         this.battleFlowController.setMessageCallback((message) => {
             if (this.display && this.display.messageDisplay) {
                 this.display.messageDisplay.addMessage(message);
+                // メッセージ追加後にUI操作状態を更新
+                setTimeout(() => {
+                    if (this.display) {
+                        this.display.updateUIInteractionState();
+                    }
+                }, 100);
             }
         });
 
@@ -133,14 +139,16 @@ class BattleScene extends HTMLElement {
         this.battleFlowController.setUIUpdateCallback((type, data) => {
             if (this.display) {
                 this.display.handleBattleUIUpdate(type, data, this.playerParty, this.enemyParty);
+                // UI更新後に操作状態を更新
+                this.display.updateUIInteractionState();
             }
         });
 
         // キーボードイベントリスナーを追加（Escキー対応）
-        document.addEventListener('keydown', (event) => {
+        document.addEventListener('keydown', async (event) => {
             if (event.key === 'Escape') {
                 event.preventDefault();
-                if (this.battleFlowController.cancelLastAction()) {
+                if (await this.battleFlowController.cancelLastAction()) {
                     console.log('前の行動がキャンセルされました');
                 }
             }
@@ -158,18 +166,18 @@ class BattleScene extends HTMLElement {
      */
     setupEventListeners() {
         // コマンドメニューからのイベント
-        this.addEventListener('command-selected', (event) => {
-            this.handleCommand(event.detail.command);
+        this.addEventListener('command-selected', async (event) => {
+            await this.handleCommand(event.detail.command);
         });
         
         // 敵選択イベント
-        this.addEventListener('enemy-selected', (event) => {
+        this.addEventListener('enemy-selected', async (event) => {
             const selectedEnemy = event.detail.enemy;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // 攻撃行動をBattleFlowControllerに設定
-                this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedEnemy);
+                await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedEnemy);
             }
         });
         
@@ -179,24 +187,24 @@ class BattleScene extends HTMLElement {
         });
         
         // アイテム選択イベント
-        this.addEventListener('item-selected', (event) => {
+        this.addEventListener('item-selected', async (event) => {
             const itemId = event.detail.itemId;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // アイテム使用行動をBattleFlowControllerに設定
-                this.battleFlowController.setPlayerAction(currentPlayer, 'item', currentPlayer, { itemId: itemId });
+                await this.battleFlowController.setPlayerAction(currentPlayer, 'item', currentPlayer, { itemId: itemId });
             }
         });
         
         // 魔法選択イベント
-        this.addEventListener('magic-selected', (event) => {
+        this.addEventListener('magic-selected', async (event) => {
             const spellId = event.detail.spellId;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
                 // 魔法行動をBattleFlowControllerに設定
-                this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
+                await this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
             }
         });
 
@@ -213,7 +221,7 @@ class BattleScene extends HTMLElement {
      * コマンド処理
      * @param {string} command - 実行するコマンド
      */
-    handleCommand(command) {
+    async handleCommand(command) {
         if (!this.battleFlowController) {
             console.error('BattleFlowController is not initialized');
             return;
@@ -236,7 +244,7 @@ class BattleScene extends HTMLElement {
                 
             case 'defend':
                 // 防御行動をBattleFlowControllerに設定
-                this.battleFlowController.setPlayerAction(currentPlayer, 'defend', currentPlayer);
+                await this.battleFlowController.setPlayerAction(currentPlayer, 'defend', currentPlayer);
                 break;
                 
             case 'magic':

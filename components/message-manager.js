@@ -285,7 +285,7 @@ class MessageManager {
                 return '魔物の群れが現れた！ 魔物の群れは、こちらが身構える前に襲いかかってきた！';
                 
             case 'enemy_appears_player_first':
-                return '魔物の群れが現れた！ コマンド？';
+                return '魔物の群れが現れた！';
                 
             case 'turn_start':
                 const characterName = params.character?.name || 'キャラクター';

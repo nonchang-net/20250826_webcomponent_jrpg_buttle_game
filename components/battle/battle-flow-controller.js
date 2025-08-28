@@ -52,7 +52,8 @@ class BattleFlowController {
             this.locale,
             this.playerParty,
             this.enemyParty,
-            this.actionResolver
+            this.actionResolver,
+            this.stateManager
         );
 
         // コールバックを設定
@@ -96,14 +97,14 @@ class BattleFlowController {
      * @param {Object} target - ターゲット
      * @param {Object} params - 追加パラメーター
      */
-    setPlayerAction(actor, actionType, target, params = {}) {
+    async setPlayerAction(actor, actionType, target, params = {}) {
         if (!this.currentBattleRule) {
             console.error('No battle rule is active');
             return;
         }
 
         try {
-            this.currentBattleRule.setPlayerAction(actor, actionType, target, params);
+            await this.currentBattleRule.setPlayerAction(actor, actionType, target, params);
             
             // 状態管理に記録
             this.stateManager.addPlayerAction({
@@ -122,13 +123,13 @@ class BattleFlowController {
     /**
      * 前の行動をキャンセルする（Escキー対応）
      */
-    cancelLastAction() {
+    async cancelLastAction() {
         if (!this.currentBattleRule) {
             return false;
         }
 
         try {
-            const success = this.currentBattleRule.cancelLastAction();
+            const success = await this.currentBattleRule.cancelLastAction();
             if (success) {
                 this.stateManager.removeLastPlayerAction();
             }

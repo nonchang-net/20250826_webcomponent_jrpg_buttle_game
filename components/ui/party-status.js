@@ -7,6 +7,7 @@ class PartyStatus extends HTMLElement {
         super();
         this.partyMembers = [];
         this.selectedMemberIndex = 0;
+        this.clickDisabled = false;
         this.setupComponent();
     }
 
@@ -157,6 +158,17 @@ class PartyStatus extends HTMLElement {
                 .damage-animation {
                     animation: damage 0.8s ease-in-out;
                 }
+
+                .click-disabled {
+                    pointer-events: none;
+                    opacity: 0.6;
+                    cursor: default;
+                }
+
+                .click-disabled:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    transform: translateX(0);
+                }
             </style>
             
             <div id="party-container">
@@ -258,6 +270,11 @@ class PartyStatus extends HTMLElement {
      * @param {number} index - 選択するメンバーのインデックス
      */
     selectMember(index) {
+        // クリックが無効化されている場合は何もしない
+        if (this.clickDisabled) {
+            return;
+        }
+
         this.selectedMemberIndex = index;
         this.render();
         
@@ -351,6 +368,23 @@ class PartyStatus extends HTMLElement {
      */
     getAliveCount() {
         return this.partyMembers.filter(member => member.currentHp > 0).length;
+    }
+
+    /**
+     * クリック無効化状態を設定する
+     * @param {boolean} disabled - 無効化するかどうか
+     */
+    setClickDisabled(disabled) {
+        this.clickDisabled = disabled;
+        
+        // 全てのメンバー要素にクリック無効化スタイルを適用/解除
+        this.querySelectorAll('.party-member').forEach(memberElement => {
+            if (disabled) {
+                memberElement.classList.add('click-disabled');
+            } else {
+                memberElement.classList.remove('click-disabled');
+            }
+        });
     }
 }
 

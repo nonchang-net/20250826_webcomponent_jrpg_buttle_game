@@ -10,6 +10,7 @@ class MessageDisplay extends HTMLElement {
         this.isDisplaying = false;
         this.textSpeed = 50; // ミリ秒間隔でテキスト表示
         this.currentTypewriterInterval = null;
+        this.onStateChangeCallback = null; // UI状態変更コールバック
         this.setupComponent();
         this.initializeWithDefaultMessage();
     }
@@ -195,6 +196,8 @@ class MessageDisplay extends HTMLElement {
                     this.isDisplaying = false;
                     this.currentTypewriterInterval = null;
                     continueIndicator.classList.add('show');
+                    // UI状態変更を通知
+                    this.notifyStateChange();
                     resolve(); // タイプライター完了を通知
                 }
             }, this.textSpeed);
@@ -231,6 +234,9 @@ class MessageDisplay extends HTMLElement {
         }
         
         this.displayMessageImmediate(this.currentMessage);
+        
+        // UI状態変更を通知
+        this.notifyStateChange();
         
         // スキップ時もPromiseを解決
         if (this.currentTypewriterResolve) {
@@ -296,6 +302,47 @@ class MessageDisplay extends HTMLElement {
      */
     setTextSpeed(speed) {
         this.textSpeed = Math.max(10, Math.min(200, speed));
+    }
+
+    /**
+     * 現在メッセージ表示中かどうかを取得
+     * @returns {boolean} メッセージ表示中の場合true
+     */
+    getIsDisplaying() {
+        return this.isDisplaying;
+    }
+
+    /**
+     * メッセージキューが空かどうかを取得
+     * @returns {boolean} メッセージキューが空の場合true
+     */
+    getIsQueueEmpty() {
+        return this.messageQueue.length === 0;
+    }
+
+    /**
+     * UI操作が可能な状態かどうかを取得
+     * @returns {boolean} UI操作可能な場合true
+     */
+    isUIInteractionAllowed() {
+        return !this.isDisplaying && this.messageQueue.length === 0;
+    }
+
+    /**
+     * UI状態変更コールバックを設定
+     * @param {Function} callback - 状態変更時に呼ばれるコールバック
+     */
+    setOnStateChangeCallback(callback) {
+        this.onStateChangeCallback = callback;
+    }
+
+    /**
+     * UI状態変更を通知
+     */
+    notifyStateChange() {
+        if (this.onStateChangeCallback) {
+            this.onStateChangeCallback();
+        }
     }
 }
 

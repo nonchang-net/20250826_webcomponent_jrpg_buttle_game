@@ -6,6 +6,7 @@ class EnemyDisplay extends HTMLElement {
     constructor() {
         super();
         this.enemies = [];
+        this.clickDisabled = false;
         this.setupComponent();
     }
 
@@ -88,6 +89,18 @@ class EnemyDisplay extends HTMLElement {
                     filter: grayscale(100%);
                     pointer-events: none;
                 }
+
+                .click-disabled {
+                    pointer-events: none;
+                    opacity: 0.6;
+                    cursor: default;
+                }
+
+                .click-disabled:hover {
+                    background: rgba(255, 255, 255, 0.1);
+                    border-color: #FFD700;
+                    transform: scale(1);
+                }
             </style>
             
             <div class="enemy-container" id="enemy-container">
@@ -143,6 +156,11 @@ class EnemyDisplay extends HTMLElement {
      * @param {number} index - 選択する敵のインデックス
      */
     selectEnemy(index) {
+        // クリックが無効化されている場合は何もしない
+        if (this.clickDisabled) {
+            return;
+        }
+
         // 既存の選択を解除
         this.querySelectorAll('.enemy.selected').forEach(enemy => {
             enemy.classList.remove('selected');
@@ -198,6 +216,23 @@ class EnemyDisplay extends HTMLElement {
     getSelectedEnemyIndex() {
         const selectedElement = this.querySelector('.enemy.selected');
         return selectedElement ? parseInt(selectedElement.dataset.index) : -1;
+    }
+
+    /**
+     * クリック無効化状態を設定する
+     * @param {boolean} disabled - 無効化するかどうか
+     */
+    setClickDisabled(disabled) {
+        this.clickDisabled = disabled;
+        
+        // 全ての敵要素にクリック無効化スタイルを適用/解除
+        this.querySelectorAll('.enemy').forEach(enemyElement => {
+            if (disabled) {
+                enemyElement.classList.add('click-disabled');
+            } else {
+                enemyElement.classList.remove('click-disabled');
+            }
+        });
     }
 }
 

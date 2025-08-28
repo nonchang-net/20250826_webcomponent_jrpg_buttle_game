@@ -1,10 +1,16 @@
 /**
  * ターン制バトルルール実装クラス
  * battle_rule_1.mdで定義されたターン制バトルシステムを実装する
+ * 
+ * デバッグ用ログ:
+ * - 各メソッドには "// DEBUG" とマークされたconsole.logが含まれています
+ * - 必要に応じてコメントアウトを解除してデバッグに活用してください
  */
 class TurnBasedBattleRule extends BattleRuleBase {
-    constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver) {
+    constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver, stateManager) {
         super(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver);
+        
+        this.stateManager = stateManager;
         
         // バトル状態管理
         this.phase = 'initial'; // 'initial', 'player_selection', 'turn_execution', 'battle_end'
@@ -21,6 +27,18 @@ class TurnBasedBattleRule extends BattleRuleBase {
     }
 
     /**
+     * フェーズを変更し、StateManagerに反映する
+     * @param {string} newPhase - 新しいフェーズ
+     */
+    setPhase(newPhase) {
+        // console.log('フェーズ変更:', this.phase, '->', newPhase); // DEBUG
+        this.phase = newPhase;
+        if (this.stateManager) {
+            this.stateManager.setPhase(newPhase);
+        }
+    }
+
+    /**
      * バトル開始時の初期化処理
      */
     initializeBattle() {
@@ -28,59 +46,91 @@ class TurnBasedBattleRule extends BattleRuleBase {
         this.initializeAllStats();
         
         // バトル開始
-        this.phase = 'initial';
+        this.setPhase('initial');
     }
 
     /**
      * バトルを開始する
      */
     async startBattle() {
+        // console.log('TurnBasedBattleRule: startBattle開始'); // DEBUG
+        
         // ランダムで先攻後攻を決定
         const isEnemyFirst = Math.random() < 0.5;
+        // console.log('先攻判定:', isEnemyFirst ? '敵先攻' : 'プレイヤー先攻'); // DEBUG
         
         if (isEnemyFirst) {
             // 1a: 敵先攻
+            // console.log('敵先攻パターンを実行'); // DEBUG
             await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears'));
             this.executeEnemyTurn();
         } else {
             // 1b: プレイヤー先攻
+            // console.log('プレイヤー先攻パターンを実行'); // DEBUG
             await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
-            this.startPlayerActionSelection();
+            await this.startPlayerActionSelection();
         }
+        
+        // console.log('TurnBasedBattleRule: startBattle完了'); // DEBUG
     }
 
     /**
      * ユーザー行動選択を開始する
      */
-    startPlayerActionSelection() {
-        this.phase = 'player_selection';
+    async startPlayerActionSelection() {
+        // console.log('startPlayerActionSelection開始'); // DEBUG
+        this.setPhase('player_selection');
         this.currentPlayerIndex = 0;
         this.playerActions = [];
-        this.selectNextPlayerAction();
+        // console.log('フェーズを player_selection に変更'); // DEBUG
+        await this.selectNextPlayerAction();
+        // console.log('startPlayerActionSelection完了'); // DEBUG
     }
 
     /**
      * 次のプレイヤーの行動選択を促す
      */
-    selectNextPlayerAction() {
+    async selectNextPlayerAction() {
+        // console.log('selectNextPlayerAction開始, currentPlayerIndex:', this.currentPlayerIndex); // DEBUG
+        
         const alivePlayersCount = this.playerParty.filter(p => p.isAlive()).length;
+        // console.log('生存プレイヤー数:', alivePlayersCount); // DEBUG
         
         if (this.currentPlayerIndex >= alivePlayersCount) {
             // 全員の行動が決定したので、ターン実行へ
+            // console.log('全員の行動決定、ターン実行開始'); // DEBUG
             this.executeTurn();
             return;
         }
 
         const currentPlayer = this.getAlivePlayerByIndex(this.currentPlayerIndex);
+        // console.log('現在のプレイヤー:', currentPlayer ? currentPlayer.name : 'null'); // DEBUG
+        
         if (currentPlayer) {
+            // StateManagerに現在のプレイヤーを設定
+            if (this.stateManager) {
+                this.stateManager.setCurrentPlayer(currentPlayer);
+            }
+            
+            // プレイヤー選択メッセージを表示
+            const message = `${currentPlayer.name}の行動を選択してください`;
+            // console.log('メッセージ表示:', message); // DEBUG
+            await this.showMessage(message);
+            // console.log('メッセージ表示完了'); // DEBUG
+            
             // UI更新: 現在選択中のプレイヤーを通知
             if (this.uiUpdateCallback) {
+                // console.log('UI更新コールバック実行'); // DEBUG
                 this.uiUpdateCallback('player_selection', {
                     currentPlayer: currentPlayer,
                     canCancel: this.currentPlayerIndex > 0
                 });
+            } else {
+                // console.log('UI更新コールバックが設定されていない'); // DEBUG
             }
         }
+        
+        // console.log('selectNextPlayerAction完了'); // DEBUG
     }
 
     /**
@@ -90,7 +140,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} target - ターゲット
      * @param {Object} params - その他のパラメーター (itemId, spellId等)
      */
-    setPlayerAction(actor, actionType, target, params = {}) {
+    async setPlayerAction(actor, actionType, target, params = {}) {
         const action = {
             actor: actor,
             type: actionType,
@@ -102,13 +152,13 @@ class TurnBasedBattleRule extends BattleRuleBase {
         this.actionHistory.push(action);
         
         this.currentPlayerIndex++;
-        this.selectNextPlayerAction();
+        await this.selectNextPlayerAction();
     }
 
     /**
      * 前の行動選択に戻る（Escキーでのキャンセル）
      */
-    cancelLastAction() {
+    async cancelLastAction() {
         if (this.currentPlayerIndex <= 0 || this.phase !== 'player_selection') {
             return false; // 最初のプレイヤーはキャンセルできない
         }
@@ -117,7 +167,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
         this.playerActions.pop();
         this.actionHistory.pop();
         
-        this.selectNextPlayerAction();
+        await this.selectNextPlayerAction();
         return true;
     }
 
@@ -125,7 +175,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * ターン実行を開始する
      */
     executeTurn() {
-        this.phase = 'turn_execution';
+        this.setPhase('turn_execution');
         this.generateTurnOrder();
         this.currentTurnIndex = 0;
         this.executeNextAction();
@@ -408,7 +458,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {string} result - 'victory' or 'defeat'
      */
     endBattle(result) {
-        this.phase = 'battle_end';
+        this.setPhase('battle_end');
         
         // MessageManagerでバトル結果メッセージを構築
         const resultMessage = this.messageManager.buildBattleStatusMessage('battle_end', {
