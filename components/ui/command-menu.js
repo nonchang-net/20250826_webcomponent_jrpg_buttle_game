@@ -7,6 +7,10 @@ class CommandMenu extends HTMLElement {
         super();
         this.currentMode = 'main'; // 'main', 'target', 'item', 'magic'
         this.selectedIndex = 0;
+        this.itemSelectedIndex = 0; // 道具選択時の選択インデックス
+        this.magicSelectedIndex = 0; // 魔法選択時の選択インデックス
+        this.currentItems = []; // 現在表示中のアイテムリスト
+        this.currentSpells = []; // 現在表示中の魔法リスト
         this.commands = [
             { id: 'fight', label: '戦う', enabled: true },
             { id: 'defend', label: '防御', enabled: true },
@@ -69,8 +73,10 @@ class CommandMenu extends HTMLElement {
                     display: flex;
                     align-items: center;
                     justify-content: flex-start;
-                    padding: 12px 20px;
-                    min-height: 45px;
+                    padding: 8px 20px;
+                    min-height: 35px;
+                    width: 100%;
+                    box-sizing: border-box;
                     position: relative;
                 }
 
@@ -123,6 +129,22 @@ class CommandMenu extends HTMLElement {
                     border-color: #AAA;
                 }
 
+                .selection-button.back-style {
+                    background: linear-gradient(145deg, #666, #444);
+                    border-color: #888;
+                }
+
+                .selection-button.back-style:hover:not(:disabled) {
+                    background: linear-gradient(145deg, #777, #555);
+                    border-color: #AAA;
+                }
+
+                .selection-button.back-style.selected {
+                    background: linear-gradient(145deg, #888, #666);
+                    border-color: #FFD700;
+                    color: #FFD700;
+                }
+
                 .target-instruction {
                     color: #FFD700;
                     font-size: 12px;
@@ -133,30 +155,62 @@ class CommandMenu extends HTMLElement {
                     border-radius: 4px;
                 }
 
-                .item-list, .magic-list {
-                    max-height: 120px;
-                    overflow-y: auto;
-                    border: 1px solid #666;
-                    border-radius: 4px;
-                    background: rgba(0,0,0,0.5);
+                .item-list, .magic-list, .selection-list {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                    flex: 1;
                 }
 
-                .item-button, .magic-button {
-                    width: 100%;
-                    text-align: left;
-                    padding: 8px 12px;
-                    font-size: 14px;
-                    min-height: auto;
-                    border: none;
-                    border-bottom: 1px solid #333;
-                    border-radius: 0;
-                    background: transparent;
+                .item-button, .magic-button, .selection-button {
+                    background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
+                    border: 2px solid #666;
                     color: white;
+                    font-size: 14px;
+                    font-weight: bold;
+                    border-radius: 8px;
+                    cursor: pointer;
+                    transition: all 0.2s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: space-between;
+                    padding: 6px 12px;
+                    min-height: 28px;
+                    width: 100%;
+                    box-sizing: border-box;
+                    position: relative;
                 }
 
-                .item-button:hover, .magic-button:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                    transform: none;
+                .item-button.selected, .magic-button.selected, .selection-button.selected {
+                    background: linear-gradient(145deg, #FFD700, #FFA000);
+                    border-color: #FFD700;
+                    color: #000;
+                    transform: translateX(10px);
+                }
+
+                .item-button.selected::before, .magic-button.selected::before, .selection-button.selected::before {
+                    content: '▶';
+                    position: absolute;
+                    left: -15px;
+                    color: #FFD700;
+                    font-size: 12px;
+                }
+
+                .item-button:hover:not(:disabled), .magic-button:hover:not(:disabled), .selection-button:hover:not(:disabled) {
+                    background: linear-gradient(145deg, #5a5a5a, #3a3a3a);
+                    border-color: #FFD700;
+                    transform: translateY(-2px);
+                }
+
+                .item-button:active:not(:disabled), .magic-button:active:not(:disabled), .selection-button:active:not(:disabled) {
+                    transform: translateY(0);
+                }
+
+                .item-button:disabled, .magic-button:disabled, .selection-button:disabled {
+                    background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+                    border-color: #333;
+                    color: #666;
+                    cursor: not-allowed;
                 }
 
                 .item-button:last-child, .magic-button:last-child {
@@ -266,29 +320,45 @@ class CommandMenu extends HTMLElement {
      */
     showItemMenu(items = []) {
         this.currentMode = 'item';
+        // 戻るボタンも含めた選択可能リストを作成
+        this.currentItems = [...items, { id: '__back__', name: '戻る', isBackButton: true }];
+        this.itemSelectedIndex = 0;
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
         titleElement.textContent = '道具選択';
         
-        const commandList = document.createElement('div');
-        commandList.className = 'command-list';
-        
         const itemListContainer = document.createElement('div');
         itemListContainer.className = 'item-list';
         
         if (items.length > 0) {
-            items.forEach(item => {
+            // アイテムボタンを作成
+            items.forEach((item, index) => {
                 const itemButton = document.createElement('button');
-                itemButton.className = 'item-button command-button';
+                itemButton.className = 'item-button';
                 itemButton.dataset.item = item.id;
-                itemButton.innerHTML = `
-                    ${item.name}
-                    <span class="item-quantity">×${item.quantity}</span>
-                `;
+                itemButton.dataset.index = index;
+                
+                const itemName = document.createElement('span');
+                itemName.textContent = item.name;
+                
+                const itemQuantity = document.createElement('span');
+                itemQuantity.className = 'item-quantity';
+                itemQuantity.textContent = `×${item.quantity}`;
+                
+                itemButton.appendChild(itemName);
+                itemButton.appendChild(itemQuantity);
+                
+                if (index === this.itemSelectedIndex) {
+                    itemButton.classList.add('selected');
+                }
+                
                 itemButton.addEventListener('click', () => {
+                    this.itemSelectedIndex = index;
+                    this.updateItemSelection();
                     this.useItem(item.id);
                 });
+                
                 itemListContainer.appendChild(itemButton);
             });
         } else {
@@ -298,18 +368,26 @@ class CommandMenu extends HTMLElement {
             itemListContainer.appendChild(emptyMessage);
         }
         
+        // 戻るボタンをアイテム一覧の末尾に追加
         const backButton = document.createElement('button');
-        backButton.className = 'back-button command-button';
+        backButton.className = 'selection-button back-style';
+        backButton.dataset.index = items.length;
         backButton.textContent = '戻る';
+        
+        if (items.length === this.itemSelectedIndex) {
+            backButton.classList.add('selected');
+        }
+        
         backButton.addEventListener('click', () => {
+            this.itemSelectedIndex = items.length;
+            this.updateItemSelection();
             this.showMainMenu();
         });
         
-        commandList.appendChild(itemListContainer);
-        commandList.appendChild(backButton);
+        itemListContainer.appendChild(backButton);
         
         contentElement.innerHTML = '';
-        contentElement.appendChild(commandList);
+        contentElement.appendChild(itemListContainer);
     }
 
     /**
@@ -318,22 +396,24 @@ class CommandMenu extends HTMLElement {
      */
     showMagicMenu(spells = []) {
         this.currentMode = 'magic';
+        // 戻るボタンも含めた選択可能リストを作成
+        this.currentSpells = [...spells, { id: '__back__', name: '戻る', isBackButton: true }];
+        this.magicSelectedIndex = 0;
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
         titleElement.textContent = '魔法選択';
         
-        const commandList = document.createElement('div');
-        commandList.className = 'command-list';
-        
         const magicListContainer = document.createElement('div');
         magicListContainer.className = 'magic-list';
         
         if (spells.length > 0) {
-            spells.forEach(spell => {
+            // 魔法ボタンを作成
+            spells.forEach((spell, index) => {
                 const spellButton = document.createElement('button');
-                spellButton.className = 'magic-button command-button';
+                spellButton.className = 'magic-button';
                 spellButton.dataset.spell = spell.id;
+                spellButton.dataset.index = index;
                 spellButton.disabled = spell.mpCost > spell.availableMp;
                 
                 const spellName = document.createElement('span');
@@ -347,7 +427,13 @@ class CommandMenu extends HTMLElement {
                 spellButton.appendChild(spellName);
                 spellButton.appendChild(mpCost);
                 
+                if (index === this.magicSelectedIndex) {
+                    spellButton.classList.add('selected');
+                }
+                
                 spellButton.addEventListener('click', () => {
+                    this.magicSelectedIndex = index;
+                    this.updateMagicSelection();
                     if (spell.mpCost <= spell.availableMp) {
                         this.useMagic(spell.id);
                     }
@@ -362,18 +448,26 @@ class CommandMenu extends HTMLElement {
             magicListContainer.appendChild(emptyMessage);
         }
         
+        // 戻るボタンを魔法一覧の末尾に追加
         const backButton = document.createElement('button');
-        backButton.className = 'back-button command-button';
+        backButton.className = 'selection-button back-style';
+        backButton.dataset.index = spells.length;
         backButton.textContent = '戻る';
+        
+        if (spells.length === this.magicSelectedIndex) {
+            backButton.classList.add('selected');
+        }
+        
         backButton.addEventListener('click', () => {
+            this.magicSelectedIndex = spells.length;
+            this.updateMagicSelection();
             this.showMainMenu();
         });
         
-        commandList.appendChild(magicListContainer);
-        commandList.appendChild(backButton);
+        magicListContainer.appendChild(backButton);
         
         contentElement.innerHTML = '';
-        contentElement.appendChild(commandList);
+        contentElement.appendChild(magicListContainer);
     }
 
     /**
@@ -495,22 +589,40 @@ class CommandMenu extends HTMLElement {
      */
     setupKeyboardControls() {
         document.addEventListener('keydown', (event) => {
-            // メインメニュー時のみキー操作を有効にする
-            if (this.currentMode !== 'main') return;
+            // メインメニュー、道具選択、魔法選択メニュー時にキー操作を有効にする
+            if (!['main', 'item', 'magic'].includes(this.currentMode)) return;
 
             switch (event.key) {
                 case 'ArrowUp':
                     event.preventDefault();
-                    this.moveSelection(-1);
+                    if (this.currentMode === 'main') {
+                        this.moveSelection(-1);
+                    } else if (this.currentMode === 'item') {
+                        this.moveItemSelection(-1);
+                    } else if (this.currentMode === 'magic') {
+                        this.moveMagicSelection(-1);
+                    }
                     break;
                 case 'ArrowDown':
                     event.preventDefault();
-                    this.moveSelection(1);
+                    if (this.currentMode === 'main') {
+                        this.moveSelection(1);
+                    } else if (this.currentMode === 'item') {
+                        this.moveItemSelection(1);
+                    } else if (this.currentMode === 'magic') {
+                        this.moveMagicSelection(1);
+                    }
                     break;
                 case 'Enter':
                 case ' ':
                     event.preventDefault();
-                    this.executeSelectedCommand();
+                    if (this.currentMode === 'main') {
+                        this.executeSelectedCommand();
+                    } else if (this.currentMode === 'item') {
+                        this.executeSelectedItem();
+                    } else if (this.currentMode === 'magic') {
+                        this.executeSelectedSpell();
+                    }
                     break;
                 case 'Escape':
                     event.preventDefault();
@@ -562,10 +674,82 @@ class CommandMenu extends HTMLElement {
     }
 
     /**
+     * アイテム選択を移動する
+     * @param {number} direction - 移動方向（-1: 上, 1: 下）
+     */
+    moveItemSelection(direction) {
+        if (this.currentItems.length === 0) return;
+        
+        this.itemSelectedIndex = (this.itemSelectedIndex + direction + this.currentItems.length) % this.currentItems.length;
+        this.updateItemSelection();
+    }
+
+    /**
+     * アイテム選択状態を更新する
+     */
+    updateItemSelection() {
+        const buttons = this.querySelectorAll('.item-button, .selection-button');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('selected', index === this.itemSelectedIndex);
+        });
+    }
+
+    /**
+     * 選択されたアイテムを実行する
+     */
+    executeSelectedItem() {
+        if (this.currentItems.length > 0 && this.currentItems[this.itemSelectedIndex]) {
+            const selectedItem = this.currentItems[this.itemSelectedIndex];
+            if (selectedItem.isBackButton) {
+                this.showMainMenu();
+            } else {
+                this.useItem(selectedItem.id);
+            }
+        }
+    }
+
+    /**
+     * 魔法選択を移動する
+     * @param {number} direction - 移動方向（-1: 上, 1: 下）
+     */
+    moveMagicSelection(direction) {
+        if (this.currentSpells.length === 0) return;
+        
+        this.magicSelectedIndex = (this.magicSelectedIndex + direction + this.currentSpells.length) % this.currentSpells.length;
+        this.updateMagicSelection();
+    }
+
+    /**
+     * 魔法選択状態を更新する
+     */
+    updateMagicSelection() {
+        const buttons = this.querySelectorAll('.magic-button, .selection-button');
+        buttons.forEach((button, index) => {
+            button.classList.toggle('selected', index === this.magicSelectedIndex);
+        });
+    }
+
+    /**
+     * 選択された魔法を実行する
+     */
+    executeSelectedSpell() {
+        if (this.currentSpells.length > 0 && this.currentSpells[this.magicSelectedIndex]) {
+            const selectedSpell = this.currentSpells[this.magicSelectedIndex];
+            if (selectedSpell.isBackButton) {
+                this.showMainMenu();
+            } else if (selectedSpell.mpCost <= selectedSpell.availableMp) {
+                this.useMagic(selectedSpell.id);
+            }
+        }
+    }
+
+    /**
      * 選択インデックスをリセットする
      */
     resetSelection() {
         this.selectedIndex = 0;
+        this.itemSelectedIndex = 0;
+        this.magicSelectedIndex = 0;
         this.updateSelection();
     }
 }
