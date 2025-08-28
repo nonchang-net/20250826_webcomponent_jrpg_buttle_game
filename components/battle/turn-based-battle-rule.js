@@ -34,22 +34,18 @@ class TurnBasedBattleRule extends BattleRuleBase {
     /**
      * バトルを開始する
      */
-    startBattle() {
+    async startBattle() {
         // ランダムで先攻後攻を決定
         const isEnemyFirst = Math.random() < 0.5;
         
         if (isEnemyFirst) {
             // 1a: 敵先攻
-            this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears'));
-            setTimeout(() => {
-                this.executeEnemyTurn();
-            }, 2000);
+            await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears'));
+            this.executeEnemyTurn();
         } else {
             // 1b: プレイヤー先攻
-            this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
-            setTimeout(() => {
-                this.startPlayerActionSelection();
-            }, 2000);
+            await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
+            this.startPlayerActionSelection();
         }
     }
 
@@ -410,18 +406,40 @@ class TurnBasedBattleRule extends BattleRuleBase {
     /**
      * バトルをリスタートする
      */
-    restartBattle() {
+    async restartBattle() {
         this.initializeBattle();
-        this.startBattle();
+        await this.startBattle();
     }
 
     /**
      * メッセージを表示する
      * @param {string} message - 表示メッセージ
+     * @param {number} minDisplayDuration - 最小表示時間（ミリ秒、デフォルト1000ms）
+     * @returns {Promise} メッセージ表示完了を示すPromise
      */
-    showMessage(message) {
+    async showMessage(message, minDisplayDuration = 1000) {
         if (this.messageCallback) {
-            this.messageCallback(message);
+            // MessageDisplayにメッセージを送信し、そのPromiseを取得
+            const messageDisplay = document.querySelector('message-display');
+            if (messageDisplay) {
+                // MessageDisplayのaddMessageは内部でタイプライター効果とスキップ機能を処理
+                const messagePromise = messageDisplay.addMessage(message);
+                
+                // 最小表示時間との競合解決
+                const minTimePromise = new Promise(resolve => 
+                    setTimeout(resolve, minDisplayDuration)
+                );
+                
+                // MessageDisplay完了と最小時間の両方を待機
+                await Promise.all([messagePromise, minTimePromise]);
+            } else {
+                // MessageDisplayが見つからない場合はフォールバック
+                this.messageCallback(message);
+                await new Promise(resolve => setTimeout(resolve, minDisplayDuration));
+            }
+        } else {
+            // メッセージコールバックが設定されていない場合は単純な時間待機
+            await new Promise(resolve => setTimeout(resolve, minDisplayDuration));
         }
     }
 
