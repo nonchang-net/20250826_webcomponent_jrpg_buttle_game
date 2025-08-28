@@ -6,8 +6,6 @@ class PartyStatus extends HTMLElement {
     constructor() {
         super();
         this.partyMembers = [];
-        this.selectedMemberIndex = 0;
-        this.clickDisabled = false;
         this.setupComponent();
     }
 
@@ -37,20 +35,14 @@ class PartyStatus extends HTMLElement {
                     margin : 10px;
                     color: white;
                     border-left: 4px solid #4CAF50;
-                    cursor: pointer;
                     transition: all 0.3s ease;
                     min-height: 60px;
                     flex-shrink: 0;
                 }
 
-                .party-member:hover {
-                    background: rgba(255, 255, 255, 0.15);
-                    transform: translateX(5px);
-                }
-
-                .party-member.selected {
-                    border-left-color: #FFD700;
-                    background: rgba(255, 215, 0, 0.2);
+                .party-member.weakened {
+                    border-left-color: #FFA500;
+                    background: rgba(255, 165, 0, 0.2);
                 }
 
                 .party-member.defeated {
@@ -159,16 +151,6 @@ class PartyStatus extends HTMLElement {
                     animation: damage 0.8s ease-in-out;
                 }
 
-                .click-disabled {
-                    pointer-events: none;
-                    opacity: 0.6;
-                    cursor: default;
-                }
-
-                .click-disabled:hover {
-                    background: rgba(255, 255, 255, 0.1);
-                    transform: translateX(0);
-                }
             </style>
             
             <div id="party-container">
@@ -246,47 +228,18 @@ class PartyStatus extends HTMLElement {
                 </div>
             `;
             
-            // 選択状態の設定
-            if (index === this.selectedMemberIndex) {
-                memberElement.classList.add('selected');
-            }
-            
-            // 倒れている場合の設定
+            // HP状態による表示設定
             if (member.currentHp <= 0) {
                 memberElement.classList.add('defeated');
+            } else if (member.currentHp <= maxHp / 3) {
+                memberElement.classList.add('weakened');
             }
             
-            // クリックイベントを追加
-            memberElement.addEventListener('click', () => {
-                this.selectMember(index);
-            });
             
             container.appendChild(memberElement);
         });
     }
 
-    /**
-     * メンバーを選択する
-     * @param {number} index - 選択するメンバーのインデックス
-     */
-    selectMember(index) {
-        // クリックが無効化されている場合は何もしない
-        if (this.clickDisabled) {
-            return;
-        }
-
-        this.selectedMemberIndex = index;
-        this.render();
-        
-        // カスタムイベントを発火
-        this.dispatchEvent(new CustomEvent('member-selected', {
-            detail: { 
-                member: this.partyMembers[index],
-                index: index
-            },
-            bubbles: true
-        }));
-    }
 
     /**
      * メンバーのHPを更新する
@@ -354,13 +307,6 @@ class PartyStatus extends HTMLElement {
         }
     }
 
-    /**
-     * 選択されているメンバーのインデックスを取得する
-     * @returns {number} 選択されているメンバーのインデックス
-     */
-    getSelectedMemberIndex() {
-        return this.selectedMemberIndex;
-    }
 
     /**
      * 生存しているメンバーの数を取得する
@@ -370,22 +316,6 @@ class PartyStatus extends HTMLElement {
         return this.partyMembers.filter(member => member.currentHp > 0).length;
     }
 
-    /**
-     * クリック無効化状態を設定する
-     * @param {boolean} disabled - 無効化するかどうか
-     */
-    setClickDisabled(disabled) {
-        this.clickDisabled = disabled;
-        
-        // 全てのメンバー要素にクリック無効化スタイルを適用/解除
-        this.querySelectorAll('.party-member').forEach(memberElement => {
-            if (disabled) {
-                memberElement.classList.add('click-disabled');
-            } else {
-                memberElement.classList.remove('click-disabled');
-            }
-        });
-    }
 }
 
 // カスタム要素として登録

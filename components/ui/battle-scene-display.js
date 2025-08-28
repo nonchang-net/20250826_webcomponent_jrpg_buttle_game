@@ -192,25 +192,7 @@ class BattleSceneDisplay {
         }
     }
 
-    /**
-     * 敵キャラクターのクリック無効化状態を管理する
-     * @param {boolean} disabled - 無効化するかどうか
-     */
-    setEnemyClickDisabled(disabled) {
-        if (this.enemyDisplay) {
-            this.enemyDisplay.setClickDisabled(disabled);
-        }
-    }
 
-    /**
-     * パーティメンバーのクリック無効化状態を管理する
-     * @param {boolean} disabled - 無効化するかどうか
-     */
-    setPartyClickDisabled(disabled) {
-        if (this.partyStatus) {
-            this.partyStatus.setClickDisabled(disabled);
-        }
-    }
 
     /**
      * UI操作抑制状態を更新する
@@ -248,8 +230,6 @@ class BattleSceneDisplay {
         }
         
         // 敵とパーティメンバーのクリック無効化
-        this.setEnemyClickDisabled(!interactionAllowed);
-        this.setPartyClickDisabled(!interactionAllowed);
     }
 
     // 古いテスト用メソッド - performAttackAnimation は削除済み

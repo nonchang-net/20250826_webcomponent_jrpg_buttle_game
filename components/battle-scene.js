@@ -170,16 +170,6 @@ class BattleScene extends HTMLElement {
             await this.handleCommand(event.detail.command);
         });
         
-        // 敵選択イベント（既存のenemy-displayコンポーネント用）
-        this.addEventListener('enemy-selected', async (event) => {
-            const selectedEnemy = event.detail.enemy;
-            const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
-            
-            if (this.battleFlowController && currentPlayer) {
-                // 攻撃行動をBattleFlowControllerに設定
-                await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedEnemy);
-            }
-        });
         
         // ターゲット選択イベント（新しいコマンドメニュー用）
         this.addEventListener('target-selected', async (event) => {
@@ -192,10 +182,6 @@ class BattleScene extends HTMLElement {
             }
         });
         
-        // パーティメンバー選択イベント
-        this.addEventListener('member-selected', (event) => {
-            console.log('パーティメンバーが選択されました:', event.detail.member.name);
-        });
         
         // アイテム選択イベント
         this.addEventListener('item-selected', async (event) => {
