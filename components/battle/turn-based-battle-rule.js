@@ -8,7 +8,7 @@
  */
 class TurnBasedBattleRule extends BattleRuleBase {
     // メッセージ表示完了後の待機時間定数
-    static MESSAGE_COMPLETION_WAIT_TIME = 800; // メッセージ表示完了後の待機時間（ミリ秒）
+    static MESSAGE_COMPLETION_WAIT_TIME = 200; // メッセージ表示完了後の待機時間（ミリ秒）
     constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver, stateManager) {
         super(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver);
         
@@ -58,7 +58,9 @@ class TurnBasedBattleRule extends BattleRuleBase {
         // console.log('TurnBasedBattleRule: startBattle開始'); // DEBUG
         
         // ランダムで先攻後攻を決定
-        const isEnemyFirst = Math.random() < 0.5;
+        // const isEnemyFirst = Math.random() < 0.5;
+        // テスト用: 敵先行はUIテストのイテレーションを悪くするため一旦解除
+        const isEnemyFirst = false;
         // console.log('先攻判定:', isEnemyFirst ? '敵先攻' : 'プレイヤー先攻'); // DEBUG
         
         if (isEnemyFirst) {
@@ -91,8 +93,9 @@ class TurnBasedBattleRule extends BattleRuleBase {
 
     /**
      * 次のプレイヤーの行動選択を促す
+     * @param {boolean} suppressUICallback - UI更新コールバックを抑制するかどうか
      */
-    async selectNextPlayerAction() {
+    async selectNextPlayerAction(suppressUICallback = false) {
         // console.log('selectNextPlayerAction開始, currentPlayerIndex:', this.currentPlayerIndex); // DEBUG
         
         const alivePlayersCount = this.playerParty.filter(p => p.isAlive()).length;
@@ -120,15 +123,15 @@ class TurnBasedBattleRule extends BattleRuleBase {
             await this.showMessageAndWait(message);
             // console.log('メッセージ表示完了'); // DEBUG
             
-            // UI更新: 現在選択中のプレイヤーを通知
-            if (this.uiUpdateCallback) {
+            // UI更新: 現在選択中のプレイヤーを通知（キャンセル時は抑制）
+            if (this.uiUpdateCallback && !suppressUICallback) {
                 // console.log('UI更新コールバック実行'); // DEBUG
                 this.uiUpdateCallback('player_selection', {
                     currentPlayer: currentPlayer,
                     canCancel: this.currentPlayerIndex > 0
                 });
             } else {
-                // console.log('UI更新コールバックが設定されていない'); // DEBUG
+                // console.log('UI更新コールバックが抑制または設定されていない'); // DEBUG
             }
         }
         
@@ -169,7 +172,8 @@ class TurnBasedBattleRule extends BattleRuleBase {
         this.playerActions.pop();
         this.actionHistory.pop();
         
-        await this.selectNextPlayerAction();
+        // キャンセル時はUI更新を抑制するためのフラグ付きで呼び出し
+        await this.selectNextPlayerAction(true);
         return true;
     }
 

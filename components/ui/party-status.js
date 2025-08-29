@@ -178,8 +178,8 @@ class PartyStatus extends HTMLElement {
     setPartyMembers(members) {
         this.partyMembers = members.map(member => ({
             ...member,
-            currentHp: member.currentHp || parseInt(member.hp),
-            currentMp: member.currentMp || parseInt(member.mp),
+            currentHp: member.currentHp || parseInt(member.hp) || 0,
+            currentMp: member.currentMp || parseInt(member.mp) || 0,
             level: member.level || 1,
             statusEffects: member.statusEffects || []
         }));
@@ -202,7 +202,7 @@ class PartyStatus extends HTMLElement {
             const maxHp = member.maxHp;
             const maxMp = member.maxMp;
             const hpPercentage = Math.floor((member.currentHp / maxHp) * 100);
-            const mpPercentage = Math.floor((member.currentMp / maxMp) * 100);
+            const mpPercentage = maxMp > 0 ? Math.floor((member.currentMp / maxMp) * 100) : 0;
             
             // 装備情報を取得
             const equippedItem = member.inventoryItems?.find(item => item.equipped === "TRUE");

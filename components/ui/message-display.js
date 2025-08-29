@@ -8,7 +8,7 @@ class MessageDisplay extends HTMLElement {
         this.currentMessage = '';
         this.messageQueue = [];
         this.isDisplaying = false;
-        this.textSpeed = 50; // ミリ秒間隔でテキスト表示
+        this.textSpeed = 30; // ミリ秒間隔でテキスト表示
         this.currentTypewriterInterval = null;
         this.onStateChangeCallback = null; // UI状態変更コールバック
         this.setupComponent();

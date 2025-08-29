@@ -148,11 +148,38 @@ class BattleScene extends HTMLElement {
         document.addEventListener('keydown', async (event) => {
             if (event.key === 'Escape') {
                 event.preventDefault();
+                
+                // 最初のキャラクターの場合はキャンセルできない
+                if (this.battleFlowController && this.battleFlowController.currentBattleRule) {
+                    const currentPlayerIndex = this.battleFlowController.currentBattleRule.currentPlayerIndex;
+                    if (currentPlayerIndex <= 0) {
+                        return; // 最初のプレイヤーはキャンセル不可
+                    }
+                }
+                
+                // (1) Escキー押下時に即座にコマンドメニューを非表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.setCommandMenuVisibility(false);
+                }
+                
                 if (await this.battleFlowController.cancelLastAction()) {
-                    console.log('前の行動がキャンセルされました');
-                    // キャンセル直後にコマンドメニューを即座に更新（無効化は player_selection で適切に処理される）
+                    // (2) 200ms後にコマンドメニューを再表示（メッセージ表示完了を待たない）
+                    setTimeout(() => {
+                        if (this.display && this.display.commandMenu) {
+                            this.display.setCommandMenuVisibility(true);
+                            this.display.commandMenu.showMainMenu();
+                        }
+                        
+                        // アクティブプレイヤー表示を更新
+                        if (this.display && this.display.partyStatus && this.battleFlowController) {
+                            const currentPlayer = this.battleFlowController.getCurrentPlayer();
+                            this.display.partyStatus.setActivePlayer(currentPlayer);
+                        }
+                    }, 200);
+                } else {
+                    // キャンセルできなかった場合はコマンドメニューを再表示
                     if (this.display && this.display.commandMenu) {
-                        this.display.commandMenu.showMainMenu();
+                        this.display.setCommandMenuVisibility(true);
                     }
                 }
             }

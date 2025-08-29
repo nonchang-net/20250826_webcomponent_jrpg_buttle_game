@@ -137,6 +137,8 @@ class BattleSceneDisplay {
                     this.commandMenu.showMainMenu();
                     // メッセージ表示完了後なので有効化
                     this.commandMenu.setInteractionEnabled(true);
+                    // 新しいプレイヤーの選択開始時は表示状態をリセット
+                    this.commandMenu.style.display = 'block';
                 }
                 break;
             
@@ -226,6 +228,9 @@ class BattleSceneDisplay {
     setCommandMenuVisibility(visible) {
         if (this.commandMenu) {
             this.commandMenu.style.display = visible ? 'block' : 'none';
+            
+            // 表示/非表示時に操作状態も設定
+            this.commandMenu.setInteractionEnabled(visible);
         }
     }
 
@@ -253,15 +258,23 @@ class BattleSceneDisplay {
             const currentPhase = battleState.state.phase;
             
             // プレイヤー選択フェーズまたはバトル終了時のみコマンドメニューを表示
-            const showCommandMenu = (currentPhase === 'player_selection' || currentPhase === 'battle_end') && interactionAllowed;
+            // ただし、既に非表示に設定されている場合は表示しない
+            const isCurrentlyHidden = this.commandMenu && this.commandMenu.style.display === 'none';
+            const shouldShow = (currentPhase === 'player_selection' || currentPhase === 'battle_end') && interactionAllowed;
+            
             /*
             console.log('コマンドメニュー状態:', {
                 currentPhase: currentPhase,
-                showCommandMenu: showCommandMenu,
+                shouldShow: shouldShow,
+                isCurrentlyHidden: isCurrentlyHidden,
                 battleState: battleState.state
             });
             */
-            this.setCommandMenuVisibility(showCommandMenu);
+            
+            // プレイヤー選択フェーズで非表示でない場合のみ表示
+            if (shouldShow && !isCurrentlyHidden) {
+                this.setCommandMenuVisibility(true);
+            }
         } else {
             // console.log('BattleFlowController が利用できない'); // DEBUG
         }
