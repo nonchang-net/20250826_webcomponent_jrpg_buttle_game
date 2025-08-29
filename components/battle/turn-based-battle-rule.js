@@ -431,26 +431,19 @@ class TurnBasedBattleRule extends BattleRuleBase {
                         // amount または baseHeal プロパティから回復量を取得
                         const healAmount = effect.amount || effect.baseHeal || 0;
                         if (typeof healAmount === 'number' && healAmount > 0) {
-                            const previousHp = actualPartyMember.currentHp;
-                            
                             // 正しいパーティメンバーのActorインスタンスに回復適用
                             if (typeof actualPartyMember.heal === 'function') {
                                 actualPartyMember.heal(healAmount);
-                                // console.log(`${actualPartyMember.name} HP回復: ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`);
                             } else {
                                 // healメソッドがない場合は直接HP回復
                                 actualPartyMember.currentHp = Math.min(actualPartyMember.maxHp, actualPartyMember.currentHp + healAmount);
-                                // console.log(`${actualPartyMember.name} HP回復(直接): ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`);
                             }
                             
                             // 回復後即座にパーティステータス表示を更新
                             if (this.uiUpdateCallback) {
-                                console.log('回復後のUI更新を実行'); // DEBUG
                                 this.uiUpdateCallback('party_status_update', {
                                     playerParty: this.playerParty
                                 });
-                            } else {
-                                console.warn('回復後のUI更新: uiUpdateCallbackが設定されていません'); // DEBUG
                             }
                         } else {
                             console.error('回復量が無効:', { amount: effect.amount, baseHeal: effect.baseHeal });
@@ -462,37 +455,29 @@ class TurnBasedBattleRule extends BattleRuleBase {
                     
                 case 'damage':
                     if (effect.target && typeof effect.amount === 'number') {
-                        const previousHp = effect.target.currentHp;
                         effect.target.takeDamage(effect.amount);
-                        // console.log(`${effect.target.name} ダメージ: ${previousHp} → ${effect.target.currentHp} (-${effect.amount})`);
                         
                         // ダメージ後即座にステータス表示を更新
                         if (this.uiUpdateCallback) {
                             // プレイヤーへのダメージの場合はパーティステータス更新
                             const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
                             if (isPlayerTarget) {
-                                console.log('プレイヤーダメージ後のUI更新を実行'); // DEBUG
                                 this.uiUpdateCallback('party_status_update', {
                                     playerParty: this.playerParty
                                 });
                             } else {
                                 // 敵へのダメージの場合は敵ステータス更新
-                                console.log('敵ダメージ後のUI更新を実行'); // DEBUG
                                 this.uiUpdateCallback('enemy_status_update', {
                                     enemyParty: this.enemyParty
                                 });
                             }
-                        } else {
-                            console.warn('ダメージ後のUI更新: uiUpdateCallbackが設定されていません'); // DEBUG
                         }
                     }
                     break;
                     
                 case 'mp_restore':
                     if (effect.target && typeof effect.amount === 'number') {
-                        const previousMp = effect.target.currentMp;
                         effect.target.currentMp = Math.min(effect.target.maxMp, effect.target.currentMp + effect.amount);
-                        // console.log(`${effect.target.name} MP回復: ${previousMp} → ${effect.target.currentMp} (+${effect.amount})`);
                         
                         // MP回復後即座にステータス表示を更新
                         if (this.uiUpdateCallback) {
@@ -512,9 +497,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
                     
                 case 'mp_consume':
                     if (effect.target && typeof effect.amount === 'number') {
-                        const previousMp = effect.target.currentMp;
                         effect.target.currentMp = Math.max(0, effect.target.currentMp - effect.amount);
-                        // console.log(`${effect.target.name} MP消費: ${previousMp} → ${effect.target.currentMp} (-${effect.amount})`);
                         
                         // MP消費後即座にステータス表示を更新
                         if (this.uiUpdateCallback) {
@@ -536,14 +519,48 @@ class TurnBasedBattleRule extends BattleRuleBase {
                     if (effect.target && effect.itemId && typeof effect.amount === 'number') {
                         // アイテム消費処理
                         if (effect.target.consumeItem && typeof effect.target.consumeItem === 'function') {
-                            const consumed = effect.target.consumeItem(effect.itemId, effect.amount);
-                            // console.log(`${effect.target.name} アイテム消費: ${effect.itemId} x${effect.amount} (成功: ${consumed})`);
+                            effect.target.consumeItem(effect.itemId, effect.amount);
                         } else {
                             console.error('アイテム消費メソッドが利用できません:', effect.target);
                         }
                     } else {
                         console.error('アイテム消費効果の設定が不正です:', effect);
                     }
+                    break;
+                    
+                case 'defeat':
+                    // 対象が倒された際の処理（特別な処理は不要、状態更新のみ）
+                    // UI更新は既に親メソッドで実行されるため、特別な処理は不要
+                    break;
+                    
+                case 'attack':
+                    // 攻撃効果（ActionResolverでダメージ効果に変換されることが多い）
+                    // 通常はdamage効果として処理されるため、特別な処理は不要
+                    break;
+                    
+                case 'magic_damage':
+                    // 魔法ダメージ（damageと同様の処理）
+                    if (effect.target && typeof effect.amount === 'number') {
+                        effect.target.takeDamage(effect.amount);
+                        
+                        // 魔法ダメージ後即座にステータス表示を更新
+                        if (this.uiUpdateCallback) {
+                            const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
+                            if (isPlayerTarget) {
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                this.uiUpdateCallback('enemy_status_update', {
+                                    enemyParty: this.enemyParty
+                                });
+                            }
+                        }
+                    }
+                    break;
+                    
+                case 'defend':
+                    // 防御効果（特別な処理は不要）
                     break;
                     
                 default:

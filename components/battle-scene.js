@@ -242,19 +242,13 @@ class BattleScene extends HTMLElement {
             const itemId = event.detail.itemId;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
-            // console.log('アイテム選択イベント受信:', { itemId, currentPlayer: currentPlayer?.name });
-            
             if (this.battleFlowController && currentPlayer) {
-                // console.log('バトルフローコントローラーとプレイヤー確認OK');
-                
                 // アイテムの消費チェック
                 const hasItem = currentPlayer.hasItem(itemId, 1);
-                // console.log('アイテム所持チェック:', hasItem);
                 
                 if (!hasItem) {
                     // アイテムが不足している場合
                     const itemName = this.getItemName(itemId);
-                    // console.log('アイテム不足:', itemName);
                     this.display.messageDisplay.showMessage(`${itemName}が足りない！`);
                     
                     // コマンドメニューを再表示
@@ -267,19 +261,14 @@ class BattleScene extends HTMLElement {
                 }
                 
                 // マクロコマンドを取得してターゲット選択が必要かチェック
-                // console.log('ターゲット選択チェック開始');
                 const needsTargetSelection = this.checkIfItemNeedsTargetSelection(itemId);
-                // console.log('ターゲット選択必要か:', needsTargetSelection);
                 
                 if (needsTargetSelection) {
                     // ターゲット選択が必要な場合
                     const targetType = this.getItemTargetType(itemId);
-                    // console.log('ターゲットタイプ:', targetType);
-                    // console.log('ターゲット選択表示開始');
                     await this.showTargetSelection(itemId, targetType, 'item');
                 } else {
                     // ターゲット選択が不要な場合（全体効果など）
-                    // console.log('ターゲット選択不要、直接実行');
                     if (this.display && this.display.commandMenu) {
                         this.display.setCommandMenuVisibility(false);
                     }
@@ -371,10 +360,8 @@ class BattleScene extends HTMLElement {
                 break;
                 
             case 'item':
-                // console.log('道具コマンド選択');
                 // 利用可能なアイテムを取得して表示
                 const items = this.battleFlowController.getAvailableItems(currentPlayer);
-                // console.log('利用可能アイテム:', items);
                 if (this.display && this.display.commandMenu) {
                     this.display.commandMenu.showItemMenu(items);
                 }
@@ -402,12 +389,8 @@ class BattleScene extends HTMLElement {
      * @returns {boolean} ターゲット選択が必要かどうか
      */
     checkIfItemNeedsTargetSelection(itemId) {
-        // console.log('checkIfItemNeedsTargetSelection開始:', itemId);
-        
         const battleRule = this.battleFlowController?.currentBattleRule;
-        // console.log('battleRule取得:', !!battleRule);
         const inventoriesDatabase = battleRule?.inventoriesDatabase;
-        // console.log('inventoriesDatabase取得:', !!inventoriesDatabase);
         
         if (!inventoriesDatabase || !inventoriesDatabase[itemId]) {
             console.error('アイテムデータが見つからない');
@@ -415,29 +398,21 @@ class BattleScene extends HTMLElement {
         }
 
         const itemData = inventoriesDatabase[itemId];
-        // console.log('アイテムデータ取得:', itemData);
         const commands = itemData.commands || [];
-        // console.log('コマンド数:', commands.length);
 
         for (const command of commands) {
-            // console.log('コマンド処理中:', command.command_id);
             const commandsDatabase = battleRule?.commandsDatabase;
-            // console.log('commandsDatabase取得:', !!commandsDatabase);
             
             if (commandsDatabase && commandsDatabase[command.command_id]) {
                 const commandData = commandsDatabase[command.command_id];
-                // console.log('コマンドデータ取得:', commandData.name);
                 const subCommands = commandData.sub_commands || [];
-                // console.log('サブコマンド数:', subCommands.length);
                 
                 // 全体ターゲット設定コマンドがあるかチェック
                 const hasWholeTarget = subCommands.some(subCmd => 
                     subCmd.command_id === '23ca1336-358d-461b-8e74-20beebe59f98'
                 );
-                // console.log('全体ターゲット設定:', hasWholeTarget);
                 
                 if (hasWholeTarget) {
-                    // console.log('全体効果のためターゲット選択不要');
                     return false; // 全体効果なのでターゲット選択不要
                 }
 
@@ -446,10 +421,8 @@ class BattleScene extends HTMLElement {
                     subCmd.command_id === '00d103f0-f9e1-4b61-a5c4-bf211a205412' || // 味方を対象とする
                     subCmd.command_id === 'a2540dff-b99d-4409-9f92-e113bf66c837'   // 相手を対象とする
                 );
-                // console.log('ターゲットコマンド:', hasTargetCommand);
                 
                 if (hasTargetCommand) {
-                    // console.log('ターゲット選択必要');
                     return true; // ターゲット選択が必要
                 }
             } else {
@@ -457,7 +430,6 @@ class BattleScene extends HTMLElement {
             }
         }
         
-        // console.log('デフォルトでターゲット選択不要');
         return false;
     }
 
