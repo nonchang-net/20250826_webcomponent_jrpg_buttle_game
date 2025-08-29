@@ -181,6 +181,11 @@ class BattleScene extends HTMLElement {
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
+                // 行動確定時にコマンドメニューを即座に非表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.setCommandMenuVisibility(false);
+                }
+                
                 // 攻撃行動をBattleFlowControllerに設定
                 await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedTarget);
             }
@@ -193,6 +198,11 @@ class BattleScene extends HTMLElement {
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
+                // 行動確定時にコマンドメニューを即座に非表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.setCommandMenuVisibility(false);
+                }
+                
                 // アイテム使用行動をBattleFlowControllerに設定
                 await this.battleFlowController.setPlayerAction(currentPlayer, 'item', currentPlayer, { itemId: itemId });
             }
@@ -204,6 +214,11 @@ class BattleScene extends HTMLElement {
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
+                // 行動確定時にコマンドメニューを即座に非表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.setCommandMenuVisibility(false);
+                }
+                
                 // 魔法行動をBattleFlowControllerに設定
                 await this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
             }
@@ -245,6 +260,11 @@ class BattleScene extends HTMLElement {
                 break;
                 
             case 'defend':
+                // 行動確定時にコマンドメニューを即座に非表示
+                if (this.display && this.display.commandMenu) {
+                    this.display.setCommandMenuVisibility(false);
+                }
+                
                 // 防御行動をBattleFlowControllerに設定
                 await this.battleFlowController.setPlayerAction(currentPlayer, 'defend', currentPlayer);
                 break;

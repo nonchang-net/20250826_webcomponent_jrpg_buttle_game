@@ -7,6 +7,8 @@
  * - 必要に応じてコメントアウトを解除してデバッグに活用してください
  */
 class TurnBasedBattleRule extends BattleRuleBase {
+    // メッセージ表示完了後の待機時間定数
+    static MESSAGE_COMPLETION_WAIT_TIME = 800; // メッセージ表示完了後の待機時間（ミリ秒）
     constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver, stateManager) {
         super(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver);
         
@@ -62,12 +64,12 @@ class TurnBasedBattleRule extends BattleRuleBase {
         if (isEnemyFirst) {
             // 1a: 敵先攻
             // console.log('敵先攻パターンを実行'); // DEBUG
-            await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears'));
+            await this.showMessageAndWait(this.messageManager.buildBattleStatusMessage('enemy_appears'));
             this.executeEnemyTurn();
         } else {
             // 1b: プレイヤー先攻
             // console.log('プレイヤー先攻パターンを実行'); // DEBUG
-            await this.showMessage(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
+            await this.showMessageAndWait(this.messageManager.buildBattleStatusMessage('enemy_appears_player_first'));
             await this.startPlayerActionSelection();
         }
         
@@ -112,10 +114,10 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 this.stateManager.setCurrentPlayer(currentPlayer);
             }
             
-            // プレイヤー選択メッセージを表示
+            // プレイヤー選択メッセージを表示し、完了後に待機
             const message = `${currentPlayer.name}の行動を選択してください`;
             // console.log('メッセージ表示:', message); // DEBUG
-            await this.showMessage(message);
+            await this.showMessageAndWait(message);
             // console.log('メッセージ表示完了'); // DEBUG
             
             // UI更新: 現在選択中のプレイヤーを通知
@@ -279,9 +281,9 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 action.actor.name, 
                 action.target.name
             );
-            this.showMessage(message);
+            this.showMessageAndWait(message);
         } else {
-            this.showMessage(result.message || this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: '攻撃' }));
+            this.showMessageAndWait(result.message || this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: '攻撃' }));
         }
 
         setTimeout(() => {
@@ -305,7 +307,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
             success: true,
             effects: [{ type: 'defend', target: action.actor }]
         });
-        this.showMessage(defendMessage);
+        this.showMessageAndWait(defendMessage);
         
         setTimeout(() => {
             this.currentTurnIndex++;
@@ -329,13 +331,13 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 success: true,
                 effects: [{ type: 'heal', amount: healAmount, target: action.target }]
             }, action.actor.name, action.params.spellId);
-            this.showMessage(healMessage);
+            this.showMessageAndWait(healMessage);
         } else {
             // MPが足りない場合のメッセージ
             const failMessage = this.messageManager.buildErrorMessage('mp_insufficient', { 
                 caster: action.actor 
             });
-            this.showMessage(failMessage);
+            this.showMessageAndWait(failMessage);
         }
         
         setTimeout(() => {
@@ -358,7 +360,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
             success: true,
             effects: []
         }, action.actor.name, itemName, itemData);
-        this.showMessage(itemMessage);
+        this.showMessageAndWait(itemMessage);
         
         setTimeout(() => {
             this.currentTurnIndex++;
@@ -381,10 +383,10 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 action.actor.name,
                 result.actionData?.action?.name || 'アクション'
             );
-            this.showMessage(message);
+            this.showMessageAndWait(message);
         } else {
             console.warn("アクション失敗", result);
-            this.showMessage(this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: 'アクション' }));
+            this.showMessageAndWait(this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: 'アクション' }));
         }
         
         // 勝敗判定
@@ -468,7 +470,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
         const resultMessage = this.messageManager.buildBattleStatusMessage('battle_end', {
             victory: result === 'victory'
         });
-        this.showMessage(resultMessage);
+        this.showMessageAndWait(resultMessage);
 
         // UI更新: 再プレイボタンを表示
         if (this.uiUpdateCallback) {
@@ -485,35 +487,33 @@ class TurnBasedBattleRule extends BattleRuleBase {
     }
 
     /**
-     * メッセージを表示する
+     * メッセージを表示する（タイプライター処理完了またはスキップで即座に終了）
      * @param {string} message - 表示メッセージ
-     * @param {number} minDisplayDuration - 最小表示時間（ミリ秒、デフォルト1000ms）
      * @returns {Promise} メッセージ表示完了を示すPromise
      */
-    async showMessage(message, minDisplayDuration = 1000) {
+    async showMessage(message) {
         if (this.messageCallback) {
             // MessageDisplayにメッセージを送信し、そのPromiseを取得
             const messageDisplay = document.querySelector('message-display');
             if (messageDisplay) {
                 // MessageDisplayのaddMessageは内部でタイプライター効果とスキップ機能を処理
-                const messagePromise = messageDisplay.addMessage(message);
-                
-                // 最小表示時間との競合解決
-                const minTimePromise = new Promise(resolve => 
-                    setTimeout(resolve, minDisplayDuration)
-                );
-                
-                // MessageDisplay完了と最小時間の両方を待機
-                await Promise.all([messagePromise, minTimePromise]);
+                await messageDisplay.addMessage(message);
             } else {
                 // MessageDisplayが見つからない場合はフォールバック
                 this.messageCallback(message);
-                await new Promise(resolve => setTimeout(resolve, minDisplayDuration));
             }
-        } else {
-            // メッセージコールバックが設定されていない場合は単純な時間待機
-            await new Promise(resolve => setTimeout(resolve, minDisplayDuration));
         }
+    }
+
+    /**
+     * メッセージを表示し、完了後に待機する
+     * @param {string} message - 表示メッセージ
+     * @param {number} waitTime - 待機時間（ミリ秒、デフォルトは定数値）
+     * @returns {Promise} 全処理完了を示すPromise
+     */
+    async showMessageAndWait(message, waitTime = TurnBasedBattleRule.MESSAGE_COMPLETION_WAIT_TIME) {
+        await this.showMessage(message);
+        await new Promise(resolve => setTimeout(resolve, waitTime));
     }
 
     /**
