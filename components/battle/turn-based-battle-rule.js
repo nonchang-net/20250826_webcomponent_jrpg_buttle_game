@@ -286,6 +286,11 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 action.target.name
             );
             this.showMessageAndWait(message);
+            
+            // 効果を適用（ダメージ等）
+            if (result.effects && result.effects.length > 0) {
+                this.applyActionEffects(result.effects);
+            }
         } else {
             this.showMessageAndWait(result.message || this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: '攻撃' }));
         }
@@ -324,24 +329,25 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - 魔法行動
      */
     executeMagicAction(action) {
-        // 簡単な実装: 回復魔法
-        if (action.params.spellId && action.params.spellId.includes('回復')) {
-            const healAmount = Math.floor(Math.random() * 30) + 20; // 20-49の回復
-            action.target.currentHp = Math.min(action.target.maxHp, action.target.currentHp + healAmount);
-            action.actor.currentMp = Math.max(0, action.actor.currentMp - 5);
-            
+        // ActionResolverを使用して魔法を解決
+        const result = this.actionResolver.resolveAction(action);
+        
+        if (result.success) {
             // MessageManagerで統一的にメッセージを構築
-            const healMessage = this.messageManager.buildMagicMessage({
-                success: true,
-                effects: [{ type: 'heal', amount: healAmount, target: action.target }]
-            }, action.actor.name, action.params.spellId);
-            this.showMessageAndWait(healMessage);
+            const magicMessage = this.messageManager.buildMagicMessage(
+                result,
+                action.actor.name, 
+                action.params.spellId
+            );
+            this.showMessageAndWait(magicMessage);
+            
+            // 効果を適用（回復、MP消費等）
+            if (result.effects && result.effects.length > 0) {
+                this.applyActionEffects(result.effects);
+            }
         } else {
-            // MPが足りない場合のメッセージ
-            const failMessage = this.messageManager.buildErrorMessage('mp_insufficient', { 
-                caster: action.actor 
-            });
-            this.showMessageAndWait(failMessage);
+            // 失敗時のメッセージを表示
+            this.showMessageAndWait(result.message || this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: '魔法' }));
         }
         
         setTimeout(() => {
@@ -434,7 +440,17 @@ class TurnBasedBattleRule extends BattleRuleBase {
                             } else {
                                 // healメソッドがない場合は直接HP回復
                                 actualPartyMember.currentHp = Math.min(actualPartyMember.maxHp, actualPartyMember.currentHp + healAmount);
-                                // console.log(`${actualPartyMember.name} HP回復(直接): ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`;)
+                                // console.log(`${actualPartyMember.name} HP回復(直接): ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`);
+                            }
+                            
+                            // 回復後即座にパーティステータス表示を更新
+                            if (this.uiUpdateCallback) {
+                                console.log('回復後のUI更新を実行'); // DEBUG
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                console.warn('回復後のUI更新: uiUpdateCallbackが設定されていません'); // DEBUG
                             }
                         } else {
                             console.error('回復量が無効:', { amount: effect.amount, baseHeal: effect.baseHeal });
@@ -449,6 +465,26 @@ class TurnBasedBattleRule extends BattleRuleBase {
                         const previousHp = effect.target.currentHp;
                         effect.target.takeDamage(effect.amount);
                         // console.log(`${effect.target.name} ダメージ: ${previousHp} → ${effect.target.currentHp} (-${effect.amount})`);
+                        
+                        // ダメージ後即座にステータス表示を更新
+                        if (this.uiUpdateCallback) {
+                            // プレイヤーへのダメージの場合はパーティステータス更新
+                            const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
+                            if (isPlayerTarget) {
+                                console.log('プレイヤーダメージ後のUI更新を実行'); // DEBUG
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                // 敵へのダメージの場合は敵ステータス更新
+                                console.log('敵ダメージ後のUI更新を実行'); // DEBUG
+                                this.uiUpdateCallback('enemy_status_update', {
+                                    enemyParty: this.enemyParty
+                                });
+                            }
+                        } else {
+                            console.warn('ダメージ後のUI更新: uiUpdateCallbackが設定されていません'); // DEBUG
+                        }
                     }
                     break;
                     
@@ -457,6 +493,20 @@ class TurnBasedBattleRule extends BattleRuleBase {
                         const previousMp = effect.target.currentMp;
                         effect.target.currentMp = Math.min(effect.target.maxMp, effect.target.currentMp + effect.amount);
                         // console.log(`${effect.target.name} MP回復: ${previousMp} → ${effect.target.currentMp} (+${effect.amount})`);
+                        
+                        // MP回復後即座にステータス表示を更新
+                        if (this.uiUpdateCallback) {
+                            const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
+                            if (isPlayerTarget) {
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                this.uiUpdateCallback('enemy_status_update', {
+                                    enemyParty: this.enemyParty
+                                });
+                            }
+                        }
                     }
                     break;
                     
@@ -465,6 +515,20 @@ class TurnBasedBattleRule extends BattleRuleBase {
                         const previousMp = effect.target.currentMp;
                         effect.target.currentMp = Math.max(0, effect.target.currentMp - effect.amount);
                         // console.log(`${effect.target.name} MP消費: ${previousMp} → ${effect.target.currentMp} (-${effect.amount})`);
+                        
+                        // MP消費後即座にステータス表示を更新
+                        if (this.uiUpdateCallback) {
+                            const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
+                            if (isPlayerTarget) {
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                this.uiUpdateCallback('enemy_status_update', {
+                                    enemyParty: this.enemyParty
+                                });
+                            }
+                        }
                     }
                     break;
                     
@@ -505,6 +569,11 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 result.actionData?.action?.name || 'アクション'
             );
             this.showMessageAndWait(message);
+            
+            // 効果を適用（ダメージ等）
+            if (result.effects && result.effects.length > 0) {
+                this.applyActionEffects(result.effects);
+            }
         } else {
             console.warn("アクション失敗", result);
             this.showMessageAndWait(this.messageManager.buildErrorMessage('action_failed', { actor: action.actor, actionName: 'アクション' }));

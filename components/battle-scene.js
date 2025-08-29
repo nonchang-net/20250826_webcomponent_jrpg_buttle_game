@@ -223,9 +223,12 @@ class BattleScene extends HTMLElement {
                 } else if (actionType === 'magic') {
                     // 魔法使用処理
                     this.onTargetSelected(actionId, actionType, targetType, selectedTarget, 0);
-                } else {
+                } else if (actionType === 'fight') {
                     // 攻撃行動をBattleFlowControllerに設定
                     await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedTarget);
+                } else {
+                    // その他の行動
+                    console.warn('未対応のactionType:', actionType);
                 }
                 
                 // pendingActionをクリア
@@ -335,6 +338,13 @@ class BattleScene extends HTMLElement {
 
         switch(command) {
             case 'fight':
+                // ペンディングアクションを設定
+                this.pendingAction = {
+                    actionId: 'fight',
+                    actionType: 'fight',
+                    targetType: 'enemy'
+                };
+                
                 // 生存している敵のリストを取得してターゲット選択画面を表示
                 if (this.display && this.display.commandMenu) {
                     const aliveEnemies = this.enemyParty.filter(enemy => enemy.currentHp > 0);

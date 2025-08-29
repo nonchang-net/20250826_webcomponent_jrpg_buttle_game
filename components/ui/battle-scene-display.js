@@ -161,6 +161,14 @@ class BattleSceneDisplay {
                 }
                 break;
                 
+            case 'enemy_status_update':
+                // 敵ステータス更新（ダメージや回復など）
+                // console.log('敵ステータス更新:', data);
+                if (this.enemyDisplay && data.enemyParty) {
+                    this.enemyDisplay.setEnemies(data.enemyParty);
+                }
+                break;
+                
             case 'action_execution':
             case 'turn_end':
                 // アクション実行時やターン終了時はハイライトをリセット
