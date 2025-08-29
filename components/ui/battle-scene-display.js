@@ -47,8 +47,20 @@ class BattleSceneDisplay {
                     background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%);
                     border-top: 3px solid #FFD700;
                     display: flex;
+                    justify-content: space-between;
                     position: relative;
                 }
+
+                #command-menu {
+                    margin : 15px;
+                    display: none;
+                }
+
+                #party-status {
+                    margin-left: auto;
+                    margin-right: 15px;
+                }
+
             </style>
             
             <div class="battle-field">
@@ -57,8 +69,8 @@ class BattleSceneDisplay {
                 </div>
                 
                 <div class="ui-area">
-                    <party-status id="party-status"></party-status>
                     <command-menu id="command-menu"></command-menu>
+                    <party-status id="party-status"></party-status>
                 </div>
                 
                 <message-display id="message-display"></message-display>
