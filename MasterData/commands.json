@@ -27,6 +27,14 @@
     "name": "全体ターゲット設定",
     "sub_commands": []
   },
+  "00d103f0-f9e1-4b61-a5c4-bf211a205412": {
+    "name": "味方を対象とする",
+    "sub_commands": []
+  },
+  "a2540dff-b99d-4409-9f92-e113bf66c837": {
+    "name": "相手を対象とする",
+    "sub_commands": []
+  },
   "9a46d8c2-6e5d-4330-9cc7-00c3e042a863": {
     "name": "攻撃属性「火」設定",
     "sub_commands": []
@@ -60,6 +68,11 @@
         "command_id": "7519e60f-4e6b-4470-a47e-3c369819f900"
       },
       {
+        "sub_commands": "味方を対象とする",
+        "arg": null,
+        "command_id": "00d103f0-f9e1-4b61-a5c4-bf211a205412"
+      },
+      {
         "sub_commands": "定数加算",
         "arg": "arg2",
         "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
@@ -83,6 +96,11 @@
         "sub_commands": "消費型アイテム評価",
         "arg": "1",
         "command_id": "ec62a0e2-a713-40d6-8d99-749a755c6cd3"
+      },
+      {
+        "sub_commands": "味方を対象とする",
+        "arg": null,
+        "command_id": "00d103f0-f9e1-4b61-a5c4-bf211a205412"
       },
       {
         "sub_commands": "定数加算",
@@ -110,6 +128,11 @@
         "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
       },
       {
+        "sub_commands": "相手を対象とする",
+        "arg": null,
+        "command_id": "a2540dff-b99d-4409-9f92-e113bf66c837"
+      },
+      {
         "sub_commands": "攻撃点ルール適用",
         "arg": null,
         "command_id": "34e0a3a6-641a-4602-9f93-3eadfcaa5df8"
@@ -119,6 +142,11 @@
   "0f5a6d2a-7e6e-493b-87a4-2f8fa703c8c1": {
     "name": "ランダム単純攻撃マクロ",
     "sub_commands": [
+      {
+        "sub_commands": "相手を対象とする",
+        "arg": null,
+        "command_id": "a2540dff-b99d-4409-9f92-e113bf66c837"
+      },
       {
         "sub_commands": "ランダムターゲット設定",
         "arg": null,
@@ -134,6 +162,11 @@
   "844cfc52-36c9-4d3f-870b-040ebdccb15b": {
     "name": "全体攻撃マクロ",
     "sub_commands": [
+      {
+        "sub_commands": "相手を対象とする",
+        "arg": null,
+        "command_id": "a2540dff-b99d-4409-9f92-e113bf66c837"
+      },
       {
         "sub_commands": "定数加算",
         "arg": "arg1",

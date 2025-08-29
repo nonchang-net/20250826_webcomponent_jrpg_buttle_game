@@ -9,8 +9,8 @@
 class TurnBasedBattleRule extends BattleRuleBase {
     // メッセージ表示完了後の待機時間定数
     static MESSAGE_COMPLETION_WAIT_TIME = 200; // メッセージ表示完了後の待機時間（ミリ秒）
-    constructor(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver, stateManager) {
-        super(actors, inventories, messages, locale, playerParty, enemyParty, actionResolver);
+    constructor(actors, inventories, commands, messages, locale, playerParty, enemyParty, actionResolver, stateManager) {
+        super(actors, inventories, commands, messages, locale, playerParty, enemyParty, actionResolver);
         
         this.stateManager = stateManager;
         
@@ -355,21 +355,100 @@ class TurnBasedBattleRule extends BattleRuleBase {
      * @param {Object} action - アイテム使用行動
      */
     executeItemAction(action) {
-        // アイテムIDからアイテムデータを取得
-        const itemData = this.inventories[action.params.itemId];
-        const itemName = itemData ? itemData.name : action.params.itemId;
+        // console.log('アイテムアクション実行:', action);
         
-        // MessageManagerでアイテム使用メッセージを構築
-        const itemMessage = this.messageManager.buildItemMessage({
-            success: true,
-            effects: []
-        }, action.actor.name, itemName, itemData);
-        this.showMessageAndWait(itemMessage);
+        // ActionResolverを使用してアイテム使用を解決
+        const result = this.actionResolver.resolveAction(action);
+        
+        // console.log('アイテムアクション結果:', result);
+        
+        if (result.success) {
+            // メッセージを表示
+            this.showMessageAndWait(result.message);
+            
+            // 効果を適用（回復効果など）
+            if (result.effects && result.effects.length > 0) {
+                this.applyActionEffects(result.effects);
+            }
+            
+            // UIUpdateCallback経由でパーティステータスを更新
+            if (this.uiUpdateCallback) {
+                this.uiUpdateCallback('party_status_update', {
+                    playerParty: this.playerParty.map(player => player.getStatus())
+                });
+            }
+        } else {
+            // 失敗時のメッセージを表示
+            this.showMessageAndWait(result.message);
+        }
         
         setTimeout(() => {
             this.currentTurnIndex++;
             this.executeNextAction();
-        }, 2000);
+        }, TurnBasedBattleRule.MESSAGE_COMPLETION_WAIT_TIME);
+    }
+
+    /**
+     * アクション効果を適用する
+     * @param {Array} effects - 適用する効果の配列
+     */
+    applyActionEffects(effects) {
+        if (!effects || effects.length === 0) {
+            return;
+        }
+
+        // console.log('効果適用開始:', effects);
+
+        for (const effect of effects) {
+            // console.log('効果適用:', effect);
+            
+            switch (effect.type) {
+                case 'heal':
+                case 'item_heal':
+                    if (effect.target) {
+                        // amount または baseHeal プロパティから回復量を取得
+                        const healAmount = effect.amount || effect.baseHeal || 0;
+                        if (typeof healAmount === 'number' && healAmount > 0) {
+                            const previousHp = effect.target.currentHp;
+                            effect.target.heal(healAmount);
+                            // console.log(`${effect.target.name} HP回復: ${previousHp} → ${effect.target.currentHp} (+${healAmount})`);
+                        } else {
+                            console.error('回復量が無効:', { amount: effect.amount, baseHeal: effect.baseHeal });
+                        }
+                    } else {
+                        console.error('回復対象が無効:', effect);
+                    }
+                    break;
+                    
+                case 'damage':
+                    if (effect.target && typeof effect.amount === 'number') {
+                        const previousHp = effect.target.currentHp;
+                        effect.target.takeDamage(effect.amount);
+                        // console.log(`${effect.target.name} ダメージ: ${previousHp} → ${effect.target.currentHp} (-${effect.amount})`);
+                    }
+                    break;
+                    
+                case 'mp_restore':
+                    if (effect.target && typeof effect.amount === 'number') {
+                        const previousMp = effect.target.currentMp;
+                        effect.target.currentMp = Math.min(effect.target.maxMp, effect.target.currentMp + effect.amount);
+                        // console.log(`${effect.target.name} MP回復: ${previousMp} → ${effect.target.currentMp} (+${effect.amount})`);
+                    }
+                    break;
+                    
+                case 'mp_consume':
+                    if (effect.target && typeof effect.amount === 'number') {
+                        const previousMp = effect.target.currentMp;
+                        effect.target.currentMp = Math.max(0, effect.target.currentMp - effect.amount);
+                        // console.log(`${effect.target.name} MP消費: ${previousMp} → ${effect.target.currentMp} (-${effect.amount})`);
+                    }
+                    break;
+                    
+                default:
+                    console.error('未対応の効果タイプ:', effect.type);
+                    break;
+            }
+        }
     }
     
     /**

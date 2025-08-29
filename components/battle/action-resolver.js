@@ -298,12 +298,12 @@ class ActionResolver {
 
     /**
      * アイテム使用行動を実行する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
      * @param {Object} action - アイテム使用行動
      * @returns {Object} 実行結果
      */
     resolveItemAction(action) {
         const user = action.actor;
+        const target = action.target;
         const itemId = action.params.itemId;
         
         if (!itemId) {
@@ -323,8 +323,43 @@ class ActionResolver {
             };
         }
 
-        // アイテム効果を解決
-        return this.resolveItemEffect(user, action.target, itemData);
+        // アイテムの消費チェック
+        if (!user.hasItem(itemId, 1)) {
+            return {
+                success: false,
+                message: `${itemData.name}が足りない！`,
+                effects: []
+            };
+        }
+
+        // マクロコマンドを評価して効果を実行
+        // プレイヤーパーティが必要な場合のため、nullで渡す（必要に応じて実装を拡張）
+        const result = this.commandEvaluator.evaluateCommands(user, itemId, target, null);
+        
+        if (!result.success) {
+            return {
+                success: false,
+                message: result.message,
+                effects: []
+            };
+        }
+
+        // アイテムを消費
+        const consumeSuccess = user.consumeItem(itemId, 1);
+        if (!consumeSuccess) {
+            return {
+                success: false,
+                message: `${itemData.name}の消費に失敗しました`,
+                effects: []
+            };
+        }
+
+        return {
+            success: true,
+            message: `${user.name}は${itemData.name}を使用した！`,
+            effects: result.effects || [],
+            damage: result.damage || 0
+        };
     }
 
     /**

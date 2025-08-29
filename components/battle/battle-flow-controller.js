@@ -48,6 +48,7 @@ class BattleFlowController {
         this.currentBattleRule = new RuleClass(
             this.actors,
             this.inventories,
+            this.commands,
             this.messages,
             this.locale,
             this.playerParty,

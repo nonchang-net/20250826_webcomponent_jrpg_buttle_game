@@ -7,12 +7,14 @@ inventoriesマスターで指定されているcommand_id配列は、ゲーム�
 2d7789cf-e8ab-40be-a99b-eef9d824dbf4	定数加算	Add	Aレジスタにarg1の値を加える
 f30647ff-eedb-4c2b-bc43-0f2883055961	定数乗算	Multiply	Aレジスタをarg1で乗算する
 98cefa6c-a925-4f5b-95b3-90962ac31d42	乱数加算	RandomAdd	0〜arg1未満までの範囲の乱数をAレジスタに加算する
+00d103f0-f9e1-4b61-a5c4-bf211a205412	味方を対象とする	SetTargetFriends	味方を対象とする
+a2540dff-b99d-4409-9f92-e113bf66c837	相手を対象とする	SetTargetOtherSides	相手を対象とする
 34e0a3a6-641a-4602-9f93-3eadfcaa5df8	攻撃点ルール適用	ApplyAttack	"Aレジスタを攻撃点とした汎用攻撃ダメージルールを適用
 ・行動者の「攻撃力合計・バフデバフ状態」を加味
 ・対象者の「防御力合計・バフデバフ状態」を加味
 ＋効果反映実行"
 d9d76f5b-a9a5-4493-aae6-a93126fdf8bd	複数回攻撃ルール設定	SetMultipleAttack	arg1の値で複数回攻撃ルールを設定
-45d03551-9956-4fd4-bde2-b94b58dc0a78	ランダムターゲット設定	SetRandomTarget	ランダムな相手をターゲットに設定する
+366a92d9-ef35-49a1-b0f0-6409ce6cf708	ランダムターゲット設定	SetRandomTarget	ランダムな相手をターゲットに設定する
 23ca1336-358d-461b-8e74-20beebe59f98	全体ターゲット設定	SetWholeTarget	効果対象を全体に設定する
 9a46d8c2-6e5d-4330-9cc7-00c3e042a863	攻撃属性「火」設定	SetAttackAttributeFire	攻撃の属性を火に設定
 7519e60f-4e6b-4470-a47e-3c369819f900	MP評価	EvaluateMagicPoint	arg1のMPが足りてるか評価、足りていなければ中断、足りていれば消費して継続

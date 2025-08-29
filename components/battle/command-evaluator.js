@@ -221,6 +221,15 @@ class CommandEvaluator {
             case 'ランダムターゲット設定':
                 return this.executeRandomTargetSelection();
             
+            case '味方を対象とする':
+                return this.executeSetTargetFriends();
+            
+            case '相手を対象とする':
+                return this.executeSetTargetEnemies();
+            
+            case '全体ターゲット設定':
+                return this.executeSetWholeTargetSetting();
+            
             default:
                 console.error(`未実装のコマンド: ${commandData.name}`);
                 return {
@@ -265,7 +274,9 @@ class CommandEvaluator {
      * @param {number} value - 加算値
      */
     executeAdd(value) {
+        // console.log('executeAdd:', { value, 前: this.register });
         this.register += value;
+        // console.log('executeAdd完了:', { register: this.register });
         return {
             success: true,
             message: null,
@@ -291,9 +302,13 @@ class CommandEvaluator {
      * @param {number} max - 最大値（0～max-1の範囲）
      */
     executeRandomAdd(max) {
+        // console.log('executeRandomAdd:', { max, 前: this.register });
         if (max > 0) {
-            this.register += Math.floor(Math.random() * max);
+            const randomValue = Math.floor(Math.random() * max);
+            // console.log('乱数値:', randomValue);
+            this.register += randomValue;
         }
+        // console.log('executeRandomAdd完了:', { register: this.register });
         return {
             success: true,
             message: null,
@@ -434,6 +449,12 @@ class CommandEvaluator {
      * @param {Object} target - 対象
      */
     executeApplyItemHeal(actor, target) {
+        // console.log('executeApplyItemHeal:', { 
+        //     actor: actor.name, 
+        //     target: target.name, 
+        //     register: this.register 
+        // });
+        
         return {
             success: true,
             message: null,
@@ -536,6 +557,45 @@ class CommandEvaluator {
         this.selectedTarget = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
         //console.log('Selected target:', this.selectedTarget.name);
         
+        return {
+            success: true,
+            message: '', // メッセージは表示しない
+            effects: []
+        };
+    }
+
+    /**
+     * 味方を対象とするコマンドを実行する
+     * @returns {Object} 実行結果
+     */
+    executeSetTargetFriends() {
+        this.battleRules.targetType = 'friends';
+        return {
+            success: true,
+            message: '', // メッセージは表示しない
+            effects: []
+        };
+    }
+
+    /**
+     * 相手を対象とするコマンドを実行する
+     * @returns {Object} 実行結果
+     */
+    executeSetTargetEnemies() {
+        this.battleRules.targetType = 'enemies';
+        return {
+            success: true,
+            message: '', // メッセージは表示しない
+            effects: []
+        };
+    }
+
+    /**
+     * 全体ターゲット設定コマンドを実行する
+     * @returns {Object} 実行結果
+     */
+    executeSetWholeTargetSetting() {
+        this.battleRules.wholeTarget = true;
         return {
             success: true,
             message: '', // メッセージは表示しない

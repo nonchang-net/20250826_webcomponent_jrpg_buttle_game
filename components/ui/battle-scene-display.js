@@ -13,6 +13,7 @@ class BattleSceneDisplay {
         this.partyStatus = null;
         this.commandMenu = null;
         this.messageDisplay = null;
+        this.targetSelector = null;
     }
 
     /**
@@ -74,6 +75,7 @@ class BattleSceneDisplay {
                 </div>
                 
                 <message-display id="message-display"></message-display>
+                <target-selector id="target-selector" style="display: none;"></target-selector>
             </div>
         `;
     }
@@ -87,6 +89,7 @@ class BattleSceneDisplay {
         this.partyStatus = hostElement.querySelector('#party-status');
         this.commandMenu = hostElement.querySelector('#command-menu');
         this.messageDisplay = hostElement.querySelector('#message-display');
+        this.targetSelector = hostElement.querySelector('#target-selector');
         
         // MessageDisplayの状態変更コールバックを設定
         if (this.messageDisplay) {

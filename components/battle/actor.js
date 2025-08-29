@@ -232,6 +232,63 @@ class Actor {
     }
 
     /**
+     * 指定されたアイテムを所持しているかチェック
+     * @param {string} inventoryId - アイテムのインベントリID
+     * @param {number} requiredQuantity - 必要な個数
+     * @returns {boolean} 十分な個数を所持しているかどうか
+     */
+    hasItem(inventoryId, requiredQuantity = 1) {
+        const item = this.inventoryItems.find(inv => inv.inventory_id === inventoryId);
+        if (!item) {
+            return false;
+        }
+        
+        const currentQuantity = parseInt(item.quantity) || 0;
+        return currentQuantity >= requiredQuantity;
+    }
+
+    /**
+     * 指定されたアイテムを消費する
+     * @param {string} inventoryId - アイテムのインベントリID
+     * @param {number} consumeQuantity - 消費する個数
+     * @returns {boolean} 消費に成功したかどうか
+     */
+    consumeItem(inventoryId, consumeQuantity = 1) {
+        const itemIndex = this.inventoryItems.findIndex(inv => inv.inventory_id === inventoryId);
+        if (itemIndex === -1) {
+            return false;
+        }
+
+        const item = this.inventoryItems[itemIndex];
+        const currentQuantity = parseInt(item.quantity) || 0;
+        
+        if (currentQuantity < consumeQuantity) {
+            return false;
+        }
+
+        const newQuantity = currentQuantity - consumeQuantity;
+        if (newQuantity <= 0) {
+            // 個数が0になったらアイテムを削除
+            this.inventoryItems.splice(itemIndex, 1);
+        } else {
+            // 個数を更新
+            item.quantity = newQuantity.toString();
+        }
+
+        return true;
+    }
+
+    /**
+     * 指定されたアイテムの所持数を取得
+     * @param {string} inventoryId - アイテムのインベントリID
+     * @returns {number} 所持数
+     */
+    getItemQuantity(inventoryId) {
+        const item = this.inventoryItems.find(inv => inv.inventory_id === inventoryId);
+        return item ? parseInt(item.quantity) || 0 : 0;
+    }
+
+    /**
      * デバッグ用：アクター情報を文字列として出力
      * @returns {string} アクター情報
      */

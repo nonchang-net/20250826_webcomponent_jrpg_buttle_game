@@ -381,6 +381,7 @@ class CommandMenu extends HTMLElement {
      * @param {Array} items - 使用可能なアイテムリスト
      */
     showItemMenu(items = []) {
+        // console.log('showItemMenu called with items:', items);
         this.currentMode = 'item';
         // 戻るボタンも含めた選択可能リストを作成
         this.currentItems = [...items, { id: '__back__', name: '戻る', isBackButton: true }];
@@ -619,6 +620,7 @@ class CommandMenu extends HTMLElement {
      * @param {string} itemId - アイテムID
      */
     useItem(itemId) {
+        // console.log('useItem called with:', itemId);
         this.dispatchEvent(new CustomEvent('item-selected', {
             detail: { itemId: itemId },
             bubbles: true
