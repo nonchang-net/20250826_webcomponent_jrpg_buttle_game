@@ -44,7 +44,10 @@ class CommandEvaluator {
             const command = inventory.commands[i];
             //console.log(`Executing command ${i + 1}/${inventory.commands.length}:`, command.command_id);
             
-            const result = this.executeCommand(actor, command, target);
+            // commandにitemIdを追加
+            const commandWithItemId = { ...command, itemId: inventoryId };
+            
+            const result = this.executeCommand(actor, commandWithItemId, target);
             //console.log(`Command ${i + 1} result:`, { success: result.success, message: result.message, effectsCount: result.effects?.length || 0 });
             
             results.push(result);
@@ -134,12 +137,13 @@ class CommandEvaluator {
             const arg = this.resolveArgument(parentCommand, subCommand.arg);
             //console.log('Resolved arg:', arg);
             
-            // サブコマンドオブジェクトを構築
+            // サブコマンドオブジェクトを構築（親コマンドのitemIdを引き継ぐ）
             const resolvedSubCommand = {
                 command_id: subCommand.command_id,
                 arg1: arg,
                 arg2: null,
-                arg3: null
+                arg3: null,
+                itemId: parentCommand.itemId
             };
 
             // サブコマンド実行時は、すでに設定されたselectedTargetを優先
@@ -207,7 +211,7 @@ class CommandEvaluator {
                 return this.executeEvaluateMagicPoint(actor, parseInt(arg1) || 0);
             
             case '消費型アイテム評価':
-                return this.executeEvaluateConsumeQuantity(actor, parseInt(arg1) || 1);
+                return this.executeEvaluateConsumeQuantity(actor, parseInt(arg1) || 1, command.itemId);
             
             case '魔法回復ルール適用':
                 return this.executeApplyMagicHeal(actor, target);
@@ -412,7 +416,7 @@ class CommandEvaluator {
      * @param {Object} actor - 使用者
      * @param {number} quantity - 消費個数
      */
-    executeEvaluateConsumeQuantity(actor, quantity) {
+    executeEvaluateConsumeQuantity(actor, quantity, itemId) {
         // TODO: インベントリシステムと連携して実装
         return {
             success: true,
@@ -420,7 +424,8 @@ class CommandEvaluator {
             effects: [{
                 type: 'item_consume',
                 target: actor,
-                amount: quantity
+                amount: quantity,
+                itemId: itemId
             }]
         };
     }
@@ -449,9 +454,14 @@ class CommandEvaluator {
      * @param {Object} target - 対象
      */
     executeApplyItemHeal(actor, target) {
+        // ターゲットが指定されていない場合は、selectedTargetを使用
+        const actualTarget = target || this.selectedTarget;
+        
         // console.log('executeApplyItemHeal:', { 
         //     actor: actor.name, 
-        //     target: target.name, 
+        //     target: actualTarget?.name,
+        //     targetType: actualTarget?.constructor?.name,
+        //     hasHealMethod: typeof actualTarget?.heal === 'function',
         //     register: this.register 
         // });
         
@@ -461,7 +471,7 @@ class CommandEvaluator {
             effects: [{
                 type: 'item_heal',
                 user: actor,
-                target: target,
+                target: actualTarget,
                 baseHeal: this.register
             }]
         };

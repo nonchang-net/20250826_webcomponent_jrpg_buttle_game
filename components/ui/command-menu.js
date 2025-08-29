@@ -68,7 +68,7 @@ class CommandMenu extends HTMLElement {
                     background: linear-gradient(145deg, #4a4a4a, #2a2a2a);
                     border: 2px solid #666;
                     color: white;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: bold;
                     border-radius: 8px;
                     cursor: pointer;
@@ -76,8 +76,8 @@ class CommandMenu extends HTMLElement {
                     display: flex;
                     align-items: center;
                     justify-content: flex-start;
-                    padding: 8px 20px;
-                    min-height: 35px;
+                    padding: 6px 12px;
+                    min-height: 28px;
                     width: 100%;
                     box-sizing: border-box;
                     position: relative;
@@ -95,7 +95,7 @@ class CommandMenu extends HTMLElement {
                     position: absolute;
                     left: -15px;
                     color: #FFD700;
-                    font-size: 14px;
+                    font-size: 12px;
                 }
 
                 .command-button:hover:not(:disabled) {
@@ -323,17 +323,7 @@ class CommandMenu extends HTMLElement {
                 const targetName = document.createElement('span');
                 targetName.textContent = target.name;
                 
-                // HPバーや状態を表示する場合の拡張予定地
-                const targetStatus = document.createElement('span');
-                targetStatus.className = 'target-status';
-                if (target.currentHp !== undefined && target.maxHp !== undefined) {
-                    targetStatus.textContent = `HP:${target.currentHp}/${target.maxHp}`;
-                }
-                
                 targetButton.appendChild(targetName);
-                if (targetStatus.textContent) {
-                    targetButton.appendChild(targetStatus);
-                }
                 
                 if (index === this.targetSelectedIndex) {
                     targetButton.classList.add('selected');

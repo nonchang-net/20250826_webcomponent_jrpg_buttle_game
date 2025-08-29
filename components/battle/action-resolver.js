@@ -344,15 +344,7 @@ class ActionResolver {
             };
         }
 
-        // アイテムを消費
-        const consumeSuccess = user.consumeItem(itemId, 1);
-        if (!consumeSuccess) {
-            return {
-                success: false,
-                message: `${itemData.name}の消費に失敗しました`,
-                effects: []
-            };
-        }
+        // アイテム消費はマクロコマンド内の「消費型アイテム評価」で実行されるため、ここでは実行しない
 
         return {
             success: true,

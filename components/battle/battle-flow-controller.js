@@ -264,7 +264,7 @@ class BattleFlowController {
         if (this.messageCallback) {
             this.messageCallback(message);
         } else {
-            console.log('Battle Message:', message);
+            // console.log('Battle Message:', message);
         }
     }
 
@@ -277,7 +277,7 @@ class BattleFlowController {
         if (this.uiUpdateCallback) {
             this.uiUpdateCallback(type, data);
         } else {
-            console.log('Battle UI Update:', type, data);
+            // console.log('Battle UI Update:', type, data);
         }
     }
 

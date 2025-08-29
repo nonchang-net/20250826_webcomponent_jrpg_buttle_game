@@ -16,6 +16,7 @@ class BattleScene extends HTMLElement {
         this.enemyParty = [];
         this.battleFlowController = null;
         this.display = null;
+        this.pendingAction = null; // ターゲット選択時の一時アクション保存用
         this.init();
     }
 
@@ -207,14 +208,28 @@ class BattleScene extends HTMLElement {
             const selectedTarget = event.detail.target;
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
-            if (this.battleFlowController && currentPlayer) {
+            if (this.battleFlowController && currentPlayer && this.pendingAction) {
                 // 行動確定時にコマンドメニューを即座に非表示
                 if (this.display && this.display.commandMenu) {
                     this.display.setCommandMenuVisibility(false);
                 }
                 
-                // 攻撃行動をBattleFlowControllerに設定
-                await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedTarget);
+                // pendingActionの情報を使用してアクションを設定
+                const { actionId, actionType, targetType } = this.pendingAction;
+                
+                if (actionType === 'item') {
+                    // アイテム使用処理
+                    this.onTargetSelected(actionId, actionType, targetType, selectedTarget, 0);
+                } else if (actionType === 'magic') {
+                    // 魔法使用処理
+                    this.onTargetSelected(actionId, actionType, targetType, selectedTarget, 0);
+                } else {
+                    // 攻撃行動をBattleFlowControllerに設定
+                    await this.battleFlowController.setPlayerAction(currentPlayer, 'fight', selectedTarget);
+                }
+                
+                // pendingActionをクリア
+                this.pendingAction = null;
             }
         });
         
@@ -377,42 +392,42 @@ class BattleScene extends HTMLElement {
      * @returns {boolean} ターゲット選択が必要かどうか
      */
     checkIfItemNeedsTargetSelection(itemId) {
-        console.log('checkIfItemNeedsTargetSelection開始:', itemId);
+        // console.log('checkIfItemNeedsTargetSelection開始:', itemId);
         
         const battleRule = this.battleFlowController?.currentBattleRule;
-        console.log('battleRule取得:', !!battleRule);
+        // console.log('battleRule取得:', !!battleRule);
         const inventoriesDatabase = battleRule?.inventoriesDatabase;
-        console.log('inventoriesDatabase取得:', !!inventoriesDatabase);
+        // console.log('inventoriesDatabase取得:', !!inventoriesDatabase);
         
         if (!inventoriesDatabase || !inventoriesDatabase[itemId]) {
-            console.log('アイテムデータが見つからない');
+            console.error('アイテムデータが見つからない');
             return false;
         }
 
         const itemData = inventoriesDatabase[itemId];
-        console.log('アイテムデータ取得:', itemData);
+        // console.log('アイテムデータ取得:', itemData);
         const commands = itemData.commands || [];
-        console.log('コマンド数:', commands.length);
+        // console.log('コマンド数:', commands.length);
 
         for (const command of commands) {
-            console.log('コマンド処理中:', command.command_id);
+            // console.log('コマンド処理中:', command.command_id);
             const commandsDatabase = battleRule?.commandsDatabase;
-            console.log('commandsDatabase取得:', !!commandsDatabase);
+            // console.log('commandsDatabase取得:', !!commandsDatabase);
             
             if (commandsDatabase && commandsDatabase[command.command_id]) {
                 const commandData = commandsDatabase[command.command_id];
-                console.log('コマンドデータ取得:', commandData.name);
+                // console.log('コマンドデータ取得:', commandData.name);
                 const subCommands = commandData.sub_commands || [];
-                console.log('サブコマンド数:', subCommands.length);
+                // console.log('サブコマンド数:', subCommands.length);
                 
                 // 全体ターゲット設定コマンドがあるかチェック
                 const hasWholeTarget = subCommands.some(subCmd => 
                     subCmd.command_id === '23ca1336-358d-461b-8e74-20beebe59f98'
                 );
-                console.log('全体ターゲット設定:', hasWholeTarget);
+                // console.log('全体ターゲット設定:', hasWholeTarget);
                 
                 if (hasWholeTarget) {
-                    console.log('全体効果のためターゲット選択不要');
+                    // console.log('全体効果のためターゲット選択不要');
                     return false; // 全体効果なのでターゲット選択不要
                 }
 
@@ -421,18 +436,18 @@ class BattleScene extends HTMLElement {
                     subCmd.command_id === '00d103f0-f9e1-4b61-a5c4-bf211a205412' || // 味方を対象とする
                     subCmd.command_id === 'a2540dff-b99d-4409-9f92-e113bf66c837'   // 相手を対象とする
                 );
-                console.log('ターゲットコマンド:', hasTargetCommand);
+                // console.log('ターゲットコマンド:', hasTargetCommand);
                 
                 if (hasTargetCommand) {
-                    console.log('ターゲット選択必要');
+                    // console.log('ターゲット選択必要');
                     return true; // ターゲット選択が必要
                 }
             } else {
-                console.log('コマンドデータが見つからない:', command.command_id);
+                console.error('コマンドデータが見つからない:', command.command_id);
             }
         }
         
-        console.log('デフォルトでターゲット選択不要');
+        // console.log('デフォルトでターゲット選択不要');
         return false;
     }
 
@@ -487,13 +502,12 @@ class BattleScene extends HTMLElement {
      * @param {string} actionType - 'item' または 'magic'
      */
     async showTargetSelection(actionId, targetType, actionType) {
-        if (!this.display || !this.display.targetSelector) {
-            console.error('Target selector not available');
+        if (!this.display || !this.display.commandMenu) {
+            console.error('Command menu not available');
             return;
         }
 
         let targets = [];
-        let title = '';
 
         if (targetType === 'friend') {
             targets = this.battleFlowController.currentBattleRule.playerParty.map(player => ({
@@ -504,33 +518,28 @@ class BattleScene extends HTMLElement {
                 currentMp: player.currentMp,
                 maxMp: player.maxMp
             }));
-            title = '誰に使いますか？';
         } else {
-            targets = this.battleFlowController.currentBattleRule.enemyParty.map(enemy => ({
-                id: enemy.id,
-                name: enemy.name,
-                currentHp: enemy.currentHp,
-                maxHp: enemy.maxHp,
-                currentMp: enemy.currentMp || 0,
-                maxMp: enemy.maxMp || 0
-            })).filter(enemy => enemy.currentHp > 0); // 生存している敵のみ
-            title = '誰を攻撃しますか？';
+            targets = this.battleFlowController.currentBattleRule.enemyParty
+                .filter(enemy => enemy.currentHp > 0) // 生存している敵のみ
+                .map(enemy => ({
+                    id: enemy.id,
+                    name: enemy.name,
+                    currentHp: enemy.currentHp,
+                    maxHp: enemy.maxHp,
+                    currentMp: enemy.currentMp || 0,
+                    maxMp: enemy.maxMp || 0
+                }));
         }
         
-        // ターゲット選択画面を表示
-        this.display.targetSelector.show(
-            targets,
-            targetType,
-            title,
-            (selectedTarget, targetIndex) => {
-                // ターゲット選択完了時の処理
-                this.onTargetSelected(actionId, actionType, targetType, selectedTarget, targetIndex);
-            },
-            () => {
-                // キャンセル時の処理
-                this.onTargetSelectionCancelled();
-            }
-        );
+        // コマンドメニューでターゲット選択画面を表示
+        this.display.commandMenu.showTargetSelection(targets);
+        
+        // ターゲット選択用の一時データを保存
+        this.pendingAction = {
+            actionId: actionId,
+            actionType: actionType,
+            targetType: targetType
+        };
     }
 
     /**
@@ -545,17 +554,11 @@ class BattleScene extends HTMLElement {
         const currentPlayer = this.battleFlowController.getCurrentPlayer();
         if (!currentPlayer) return;
 
-        // 実際のターゲットオブジェクトを取得
-        let actualTarget;
-        if (targetType === 'friend') {
-            actualTarget = this.battleFlowController.currentBattleRule.playerParty[targetIndex];
-        } else {
-            const aliveEnemies = this.battleFlowController.currentBattleRule.enemyParty.filter(enemy => enemy.currentHp > 0);
-            actualTarget = aliveEnemies[targetIndex];
-        }
+        // selectedTargetを直接使用（より確実）
+        const actualTarget = selectedTarget;
 
         if (!actualTarget) {
-            console.error('Target not found');
+            console.error('Selected target not found');
             return;
         }
 

@@ -13,7 +13,6 @@ class BattleSceneDisplay {
         this.partyStatus = null;
         this.commandMenu = null;
         this.messageDisplay = null;
-        this.targetSelector = null;
     }
 
     /**
@@ -75,7 +74,6 @@ class BattleSceneDisplay {
                 </div>
                 
                 <message-display id="message-display"></message-display>
-                <target-selector id="target-selector" style="display: none;"></target-selector>
             </div>
         `;
     }
@@ -89,7 +87,6 @@ class BattleSceneDisplay {
         this.partyStatus = hostElement.querySelector('#party-status');
         this.commandMenu = hostElement.querySelector('#command-menu');
         this.messageDisplay = hostElement.querySelector('#message-display');
-        this.targetSelector = hostElement.querySelector('#target-selector');
         
         // MessageDisplayの状態変更コールバックを設定
         if (this.messageDisplay) {
@@ -156,6 +153,14 @@ class BattleSceneDisplay {
                 }
                 break;
             
+            case 'party_status_update':
+                // パーティステータス更新（アイテム使用による回復など）
+                // console.log('パーティステータス更新:', data);
+                if (this.partyStatus && data.playerParty) {
+                    this.partyStatus.setPartyMembers(data.playerParty);
+                }
+                break;
+                
             case 'action_execution':
             case 'turn_end':
                 // アクション実行時やターン終了時はハイライトをリセット
@@ -247,12 +252,12 @@ class BattleSceneDisplay {
         
         // デバッグ用ログ（必要に応じてコメントアウト解除）
         /*
-        console.log('UI操作状態更新:', {
-            interactionAllowed: interactionAllowed,
-            messageDisplayAllowed: this.messageDisplay ? this.messageDisplay.isUIInteractionAllowed() : 'N/A',
-            messageIsDisplaying: this.messageDisplay ? this.messageDisplay.getIsDisplaying() : 'N/A',
-            messageQueueEmpty: this.messageDisplay ? this.messageDisplay.getIsQueueEmpty() : 'N/A'
-        });
+        // console.log('UI操作状態更新:', {
+        //     interactionAllowed: interactionAllowed,
+        //     messageDisplayAllowed: this.messageDisplay ? this.messageDisplay.isUIInteractionAllowed() : 'N/A',
+        //     messageIsDisplaying: this.messageDisplay ? this.messageDisplay.getIsDisplaying() : 'N/A',
+        //     messageQueueEmpty: this.messageDisplay ? this.messageDisplay.getIsQueueEmpty() : 'N/A'
+        // });
         */
         
         // コマンドメニューの表示/非表示
@@ -266,12 +271,12 @@ class BattleSceneDisplay {
             const shouldShow = (currentPhase === 'player_selection' || currentPhase === 'battle_end') && interactionAllowed;
             
             /*
-            console.log('コマンドメニュー状態:', {
-                currentPhase: currentPhase,
-                shouldShow: shouldShow,
-                isCurrentlyHidden: isCurrentlyHidden,
-                battleState: battleState.state
-            });
+            // console.log('コマンドメニュー状態:', {
+            //     currentPhase: currentPhase,
+            //     shouldShow: shouldShow,
+            //     isCurrentlyHidden: isCurrentlyHidden,
+            //     battleState: battleState.state
+            // });
             */
             
             // プレイヤー選択フェーズで非表示でない場合のみ表示

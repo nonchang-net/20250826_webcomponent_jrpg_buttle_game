@@ -406,12 +406,36 @@ class TurnBasedBattleRule extends BattleRuleBase {
                 case 'heal':
                 case 'item_heal':
                     if (effect.target) {
+                        // effect.targetの型とhealメソッドの存在を確認
+                        // console.log('回復効果対象:', { 
+                        //     name: effect.target.name, 
+                        //     id: effect.target.id,
+                        //     hasHealMethod: typeof effect.target.heal === 'function',
+                        //     targetType: effect.target.constructor.name,
+                        //     currentHp: effect.target.currentHp
+                        // });
+                        
+                        // 正しいパーティメンバーを特定
+                        const actualPartyMember = this.playerParty.find(p => p.id === effect.target.id);
+                        if (!actualPartyMember) {
+                            console.error('パーティメンバーが見つかりません:', effect.target.name);
+                            break;
+                        }
+                        
                         // amount または baseHeal プロパティから回復量を取得
                         const healAmount = effect.amount || effect.baseHeal || 0;
                         if (typeof healAmount === 'number' && healAmount > 0) {
-                            const previousHp = effect.target.currentHp;
-                            effect.target.heal(healAmount);
-                            // console.log(`${effect.target.name} HP回復: ${previousHp} → ${effect.target.currentHp} (+${healAmount})`);
+                            const previousHp = actualPartyMember.currentHp;
+                            
+                            // 正しいパーティメンバーのActorインスタンスに回復適用
+                            if (typeof actualPartyMember.heal === 'function') {
+                                actualPartyMember.heal(healAmount);
+                                // console.log(`${actualPartyMember.name} HP回復: ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`);
+                            } else {
+                                // healメソッドがない場合は直接HP回復
+                                actualPartyMember.currentHp = Math.min(actualPartyMember.maxHp, actualPartyMember.currentHp + healAmount);
+                                // console.log(`${actualPartyMember.name} HP回復(直接): ${previousHp} → ${actualPartyMember.currentHp} (+${healAmount})`;)
+                            }
                         } else {
                             console.error('回復量が無効:', { amount: effect.amount, baseHeal: effect.baseHeal });
                         }
@@ -441,6 +465,20 @@ class TurnBasedBattleRule extends BattleRuleBase {
                         const previousMp = effect.target.currentMp;
                         effect.target.currentMp = Math.max(0, effect.target.currentMp - effect.amount);
                         // console.log(`${effect.target.name} MP消費: ${previousMp} → ${effect.target.currentMp} (-${effect.amount})`);
+                    }
+                    break;
+                    
+                case 'item_consume':
+                    if (effect.target && effect.itemId && typeof effect.amount === 'number') {
+                        // アイテム消費処理
+                        if (effect.target.consumeItem && typeof effect.target.consumeItem === 'function') {
+                            const consumed = effect.target.consumeItem(effect.itemId, effect.amount);
+                            // console.log(`${effect.target.name} アイテム消費: ${effect.itemId} x${effect.amount} (成功: ${consumed})`);
+                        } else {
+                            console.error('アイテム消費メソッドが利用できません:', effect.target);
+                        }
+                    } else {
+                        console.error('アイテム消費効果の設定が不正です:', effect);
                     }
                     break;
                     
