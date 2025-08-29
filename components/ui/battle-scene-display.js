@@ -119,6 +119,13 @@ class BattleSceneDisplay {
                 if (this.partyStatus) {
                     this.partyStatus.setActivePlayer(data.currentPlayer);
                 }
+                
+                // コマンドメニューをメイン画面に戻して有効化（メッセージ表示完了後のため適切なタイミング）
+                if (this.commandMenu) {
+                    this.commandMenu.showMainMenu();
+                    // メッセージ表示完了後なので有効化
+                    this.commandMenu.setInteractionEnabled(true);
+                }
                 break;
             
             case 'battle_end':

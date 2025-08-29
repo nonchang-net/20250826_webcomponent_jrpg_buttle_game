@@ -13,6 +13,7 @@ class CommandMenu extends HTMLElement {
         this.currentItems = []; // 現在表示中のアイテムリスト
         this.currentSpells = []; // 現在表示中の魔法リスト
         this.currentTargets = []; // 現在表示中のターゲットリスト
+        this.interactionEnabled = true; // コマンド選択の有効/無効状態
         this.commands = [
             { id: 'fight', label: '戦う', enabled: true },
             { id: 'defend', label: '防御', enabled: true },
@@ -256,6 +257,8 @@ class CommandMenu extends HTMLElement {
      */
     showMainMenu() {
         this.currentMode = 'main';
+        // カーソルを最初のコマンドにリセット
+        this.selectedIndex = 0;
         const titleElement = this.querySelector('#menu-title');
         const contentElement = this.querySelector('#menu-content');
         
@@ -289,6 +292,7 @@ class CommandMenu extends HTMLElement {
         
         contentElement.innerHTML = '';
         contentElement.appendChild(commandGrid);
+        this.updateUIState();
     }
 
     /**
@@ -647,6 +651,9 @@ class CommandMenu extends HTMLElement {
      */
     setupKeyboardControls() {
         document.addEventListener('keydown', (event) => {
+            // コマンド操作が無効化されている場合は何もしない
+            if (!this.interactionEnabled) return;
+            
             // メインメニュー、道具選択、魔法選択、ターゲット選択メニュー時にキー操作を有効にする
             if (!['main', 'item', 'magic', 'target'].includes(this.currentMode)) return;
 
@@ -862,6 +869,31 @@ class CommandMenu extends HTMLElement {
         this.magicSelectedIndex = 0;
         this.targetSelectedIndex = 0;
         this.updateSelection();
+    }
+
+    /**
+     * コマンド操作の有効/無効を設定する
+     * @param {boolean} enabled - 有効にするかどうか
+     */
+    setInteractionEnabled(enabled) {
+        this.interactionEnabled = enabled;
+        this.updateUIState();
+    }
+
+    /**
+     * UI状態を更新する（無効化時は視覚的にグレーアウト）
+     */
+    updateUIState() {
+        const menuContent = this.querySelector('#menu-content');
+        if (menuContent) {
+            if (this.interactionEnabled) {
+                menuContent.style.opacity = '1';
+                menuContent.style.pointerEvents = 'auto';
+            } else {
+                menuContent.style.opacity = '0.5';
+                menuContent.style.pointerEvents = 'none';
+            }
+        }
     }
 }
 

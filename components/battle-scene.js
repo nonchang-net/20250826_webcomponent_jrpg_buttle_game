@@ -150,6 +150,10 @@ class BattleScene extends HTMLElement {
                 event.preventDefault();
                 if (await this.battleFlowController.cancelLastAction()) {
                     console.log('前の行動がキャンセルされました');
+                    // キャンセル直後にコマンドメニューを即座に更新（無効化は player_selection で適切に処理される）
+                    if (this.display && this.display.commandMenu) {
+                        this.display.commandMenu.showMainMenu();
+                    }
                 }
             }
         });
