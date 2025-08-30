@@ -234,6 +234,9 @@ class CommandEvaluator {
             case '全体ターゲット設定':
                 return this.executeSetWholeTargetSetting();
             
+            case '攻撃力バフルール適用':
+                return this.executeApplyAttackBuff(actor, target, parseFloat(arg3) || 2.0);
+            
             default:
                 console.error(`未実装のコマンド: ${commandData.name}`);
                 return {
@@ -611,6 +614,39 @@ class CommandEvaluator {
             success: true,
             message: '', // メッセージは表示しない
             effects: []
+        };
+    }
+
+    /**
+     * 攻撃力バフルール適用コマンドを実行する
+     * ターゲットにAレジスタのターン数だけarg3の倍率で攻撃力乗算バフを設定する
+     * @param {Object} actor - 詠唱者
+     * @param {Object} target - 対象
+     * @param {number} multiplier - 攻撃力倍率（arg3）
+     * @returns {Object} 実行結果
+     */
+    executeApplyAttackBuff(actor, target, multiplier) {
+        // ターゲットが指定されていない場合は、selectedTargetを使用
+        const actualTarget = target || this.selectedTarget;
+        
+        if (!actualTarget) {
+            return {
+                success: false,
+                message: '攻撃力バフの対象が設定されていません',
+                effects: []
+            };
+        }
+        
+        return {
+            success: true,
+            message: null,
+            effects: [{
+                type: 'attack_buff',
+                caster: actor,
+                target: actualTarget,
+                multiplier: multiplier,
+                duration: this.register // Aレジスタのターン数
+            }]
         };
     }
 }

@@ -602,6 +602,43 @@ class TurnBasedBattleRule extends BattleRuleBase {
                     // 防御効果（特別な処理は不要）
                     break;
                     
+                case 'attack_buff':
+                    if (effect.target && typeof effect.multiplier === 'number' && typeof effect.duration === 'number') {
+                        // 正しいパーティメンバーを特定
+                        const actualTarget = this.playerParty.find(p => p.id === effect.target.id) || 
+                                           this.enemyParty.find(e => e.id === effect.target.id);
+                        
+                        if (!actualTarget) {
+                            console.error('攻撃力バフ対象が見つかりません:', effect.target.name);
+                            break;
+                        }
+                        
+                        // 正しいActorインスタンスに攻撃力バフを適用
+                        if (typeof actualTarget.setAttackBuff === 'function') {
+                            actualTarget.setAttackBuff(effect.multiplier, effect.duration);
+                        } else {
+                            console.error('setAttackBuffメソッドが利用できません:', actualTarget);
+                            break;
+                        }
+                        
+                        // バフ適用後即座にステータス表示を更新
+                        if (this.uiUpdateCallback) {
+                            const isPlayerTarget = this.playerParty.some(p => p.id === effect.target.id);
+                            if (isPlayerTarget) {
+                                this.uiUpdateCallback('party_status_update', {
+                                    playerParty: this.playerParty
+                                });
+                            } else {
+                                this.uiUpdateCallback('enemy_status_update', {
+                                    enemyParty: this.enemyParty
+                                });
+                            }
+                        }
+                    } else {
+                        console.error('攻撃力バフ効果の設定が不正です:', effect);
+                    }
+                    break;
+                    
                 default:
                     console.error('未対応の効果タイプ:', effect.type);
                     break;

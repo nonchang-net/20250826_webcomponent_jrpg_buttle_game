@@ -55,6 +55,10 @@
     "name": "薬草回復ルール適用",
     "sub_commands": []
   },
+  "c024b461-5af0-4bc9-9f58-ec06eaa85fb0": {
+    "name": "攻撃力バフルール適用",
+    "sub_commands": []
+  },
   "d2c69c4c-a333-432a-9b93-192457ea2b56": {
     "name": "メッセージ表示",
     "sub_commands": []
@@ -178,12 +182,39 @@
         "command_id": "98cefa6c-a925-4f5b-95b3-90962ac31d42"
       },
       {
-        "sub_commands": "全体攻撃ルール設定"
+        "sub_commands": "全体ターゲット設定",
+        "arg": null,
+        "command_id": "23ca1336-358d-461b-8e74-20beebe59f98"
       },
       {
         "sub_commands": "攻撃点ルール適用",
         "arg": null,
         "command_id": "34e0a3a6-641a-4602-9f93-3eadfcaa5df8"
+      }
+    ]
+  },
+  "4ab224f3-c2ea-4237-ae1e-7e88f1c9b754": {
+    "name": "攻撃力バフマクロ",
+    "sub_commands": [
+      {
+        "sub_commands": "MP評価",
+        "arg": "arg1",
+        "command_id": "7519e60f-4e6b-4470-a47e-3c369819f900"
+      },
+      {
+        "sub_commands": "味方を対象とする",
+        "arg": null,
+        "command_id": "00d103f0-f9e1-4b61-a5c4-bf211a205412"
+      },
+      {
+        "sub_commands": "定数加算",
+        "arg": "arg2",
+        "command_id": "2d7789cf-e8ab-40be-a99b-eef9d824dbf4"
+      },
+      {
+        "sub_commands": "攻撃力バフルール適用",
+        "arg": "arg3",
+        "command_id": "c024b461-5af0-4bc9-9f58-ec06eaa85fb0"
       }
     ]
   }

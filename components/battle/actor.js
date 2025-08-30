@@ -20,7 +20,8 @@ class Actor {
         
         // 戦闘状態
         this.defendingUntilNextTurn = false;
-        this.statusEffects = []; // バフ・デバフ状態（将来実装）
+        this.statusEffects = []; // バフ・デバフ状態
+        this.attackBuffs = []; // 攻撃力バフ状態
         
         // インベントリ
         this.inventoryItems = actorData.inventories || [];
@@ -79,11 +80,36 @@ class Actor {
     }
 
     /**
-     * 攻撃力合計を計算する
+     * 攻撃力合計を計算する（バフ効果含む）
      * @returns {number} 攻撃力合計
      */
     getTotalAttackPower() {
+        const baseAttack = this.getBaseAttack() + this.getEquippedWeaponAttack();
+        return this.applyAttackBuffs(baseAttack);
+    }
+
+    /**
+     * 基本攻撃力を取得する（バフなし）
+     * @returns {number} 基本攻撃力合計
+     */
+    getBaseAttackPower() {
         return this.getBaseAttack() + this.getEquippedWeaponAttack();
+    }
+
+    /**
+     * 攻撃力バフを適用する
+     * @param {number} baseAttack - 基本攻撃力
+     * @returns {number} バフ適用後の攻撃力
+     */
+    applyAttackBuffs(baseAttack) {
+        let totalMultiplier = 1.0;
+        
+        // 現在有効な攻撃力バフの倍率を累積
+        for (const buff of this.attackBuffs) {
+            totalMultiplier *= buff.multiplier;
+        }
+        
+        return Math.floor(baseAttack * totalMultiplier);
     }
 
     /**
@@ -164,6 +190,45 @@ class Actor {
     }
 
     /**
+     * 攻撃力バフを設定する
+     * バフ・デバフの重ねがけはできないものとする
+     * @param {number} multiplier - 攻撃力倍率
+     * @param {number} duration - 持続ターン数
+     */
+    setAttackBuff(multiplier, duration) {
+        // 既存の攻撃力バフをクリア（重ねがけ不可）
+        this.attackBuffs = [];
+        
+        // 新しい攻撃力バフを設定
+        this.attackBuffs.push({
+            type: 'attack_buff',
+            multiplier: multiplier,
+            duration: duration
+        });
+    }
+
+    /**
+     * 攻撃力バフを削除する
+     */
+    removeAttackBuff() {
+        this.attackBuffs = [];
+    }
+
+    /**
+     * 現在の攻撃力バフ状態を取得する
+     * @returns {Object|null} バフ情報、なければnull
+     */
+    getAttackBuffInfo() {
+        if (this.attackBuffs.length > 0) {
+            return {
+                multiplier: this.attackBuffs[0].multiplier,
+                duration: this.attackBuffs[0].duration
+            };
+        }
+        return null;
+    }
+
+    /**
      * ターン終了時の処理
      */
     endTurn() {
@@ -175,6 +240,12 @@ class Actor {
             effect.duration--;
         });
         this.statusEffects = this.statusEffects.filter(effect => effect.duration > 0);
+        
+        // 攻撃力バフの持続時間を減少
+        this.attackBuffs.forEach(buff => {
+            buff.duration--;
+        });
+        this.attackBuffs = this.attackBuffs.filter(buff => buff.duration > 0);
     }
 
     /**
@@ -193,7 +264,9 @@ class Actor {
             isAlive: this.isAlive(),
             isDefending: this.isDefending(),
             statusEffects: [...this.statusEffects],
+            attackBuffInfo: this.getAttackBuffInfo(),
             totalAttackPower: this.getTotalAttackPower(),
+            baseAttackPower: this.getBaseAttackPower(),
             defence: this.getDefence()
         };
     }

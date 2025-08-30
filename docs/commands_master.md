@@ -14,7 +14,7 @@ a2540dff-b99d-4409-9f92-e113bf66c837	相手を対象とする	SetTargetOtherSide
 ・対象者の「防御力合計・バフデバフ状態」を加味
 ＋効果反映実行"
 d9d76f5b-a9a5-4493-aae6-a93126fdf8bd	複数回攻撃ルール設定	SetMultipleAttack	arg1の値で複数回攻撃ルールを設定
-366a92d9-ef35-49a1-b0f0-6409ce6cf708	ランダムターゲット設定	SetRandomTarget	ランダムな相手をターゲットに設定する
+f55f8f5f-27fc-444c-8815-0d104ca5d594	ランダムターゲット設定	SetRandomTarget	ランダムな相手をターゲットに設定する
 23ca1336-358d-461b-8e74-20beebe59f98	全体ターゲット設定	SetWholeTarget	効果対象を全体に設定する
 9a46d8c2-6e5d-4330-9cc7-00c3e042a863	攻撃属性「火」設定	SetAttackAttributeFire	攻撃の属性を火に設定
 7519e60f-4e6b-4470-a47e-3c369819f900	MP評価	EvaluateMagicPoint	arg1のMPが足りてるか評価、足りていなければ中断、足りていれば消費して継続
@@ -27,6 +27,7 @@ ec62a0e2-a713-40d6-8d99-749a755c6cd3	消費型アイテム評価	EvaluateConsume
 ・利用者の「薬剤師」スキルボーナス適用
 ・対象者の「薬効減衰デバフ」状態があれば適用
 ＋効果反映実行"
+c024b461-5af0-4bc9-9f58-ec06eaa85fb0	攻撃力バフルール適用	ApplyAttackBuff	ターゲットにAレジスタのターン数だけarg1の直だけ攻撃力乗算バフを設定する
 d2c69c4c-a333-432a-9b93-192457ea2b56	メッセージ表示	ShowMessage	arg1のメッセージを表示する
 ```
 

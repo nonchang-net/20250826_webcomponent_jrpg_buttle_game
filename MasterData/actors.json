@@ -59,6 +59,12 @@
         "inventory_id": "73e37231-90c3-4c2d-8ded-a87348a1b14d",
         "quantity": "1",
         "equipped": "FALSE"
+      },
+      {
+        "inventories": "攻撃力倍加魔法",
+        "inventory_id": "20a523d3-d7eb-403a-9627-91e098ce0a2f",
+        "quantity": "1",
+        "equipped": "FALSE"
       }
     ]
   },
