@@ -399,7 +399,8 @@ class CommandEvaluator {
             };
         }
         
-        actor.currentMp -= cost;
+        // MP消費はeffectsに追加するのみで、ここでは直接適用しない
+        // （実際のMP消費はapplyActionEffectsで行われる）
         return {
             success: true,
             message: null,

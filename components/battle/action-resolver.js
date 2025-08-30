@@ -85,24 +85,22 @@ class ActionResolver {
             // ダメージ計算
             const damage = this.damageCalculator.calculatePhysicalDamage(attacker, target, weaponEffect.battleRules);
             
-            // ダメージ適用
-            const previousHp = target.currentHp;
-            target.currentHp = Math.max(0, target.currentHp - damage);
-            const actualDamage = previousHp - target.currentHp;
-            totalDamage += actualDamage;
+            // ダメージはeffectsに追加するのみで、ここでは直接適用しない
+            // （実際のダメージ適用はapplyActionEffectsで行われる）
+            totalDamage += damage;
 
             allEffects.push({
                 type: 'damage',
                 target: target,
-                amount: actualDamage,
-                previousHp: previousHp,
-                newHp: target.currentHp,
+                amount: damage,
                 attackNumber: i + 1,
                 totalAttacks: multipleAttackCount
             });
 
-            // 対象が倒れた場合
-            if (target.currentHp <= 0) {
+            // ダメージ後の生存チェックは、実際のダメージ適用はapplyActionEffectsで行われるため、
+            // ここでは予定ダメージ量でチェック
+            const expectedHp = Math.max(0, target.currentHp - damage);
+            if (expectedHp <= 0) {
                 allEffects.push({
                     type: 'defeat',
                     target: target
@@ -323,12 +321,12 @@ class ActionResolver {
                         
                         //console.log('damage calculation:', { baseDamage, targetDefence, finalDamage });
                         
-                        const actualDamage = targetFromEvaluator.takeDamage(finalDamage);
-                        
+                        // ダメージはeffectsに追加するのみで、ここでは直接適用しない
+                        // （実際のダメージ適用はapplyActionEffectsで行われる）
                         effects.push({
                             type: 'damage',
                             target: targetFromEvaluator,
-                            amount: actualDamage
+                            amount: finalDamage
                         });
                     });
                 }
