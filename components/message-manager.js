@@ -210,9 +210,9 @@ class MessageManager {
      * @returns {string} 魔法メッセージ
      */
     buildMagicMessage(actionResult, casterName, spellName) {
-        const messages = [`${casterName}は${spellName}を唱えた。`];
+        const messages = [`${casterName}は${spellName}を唱えた！`];
         this.buildMessagesWithHealEffects(messages, actionResult, ['magic_heal', 'heal']);
-        return messages.join('');
+        return messages.join('\n');
     }
 
     /**
@@ -285,9 +285,9 @@ class MessageManager {
             return `${userName}は${itemName}を掲げた。しかし何も起こらなかった！`;
         }
         
-        const messages = [`${userName}は${itemName}を使った。`];
+        const messages = [`${userName}は${itemName}を使った！`];
         this.buildMessagesWithHealEffects(messages, actionResult, ['item_heal', 'heal']);
-        return messages.join('');
+        return messages.join('\n');
     }
 
     /**

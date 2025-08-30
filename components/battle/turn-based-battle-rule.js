@@ -333,8 +333,43 @@ class TurnBasedBattleRule extends BattleRuleBase {
         const result = this.actionResolver.resolveAction(action);
         
         if (result.success) {
-            // ActionResolverで作成されたメッセージを使用
-            this.showMessageAndWait(result.message);
+            // MessageManagerを使用してメッセージを構築
+            const magicId = action.params.spellId;
+            const spellData = this.inventories[magicId];
+            if (!spellData) {
+                throw new Exception('魔法データが見つかりませんでした:', { magicId, action });
+            }
+            
+            // actionオブジェクトの詳細分析
+            const actionKeys = Object.keys(action);
+            const actionAnalysis = {};
+            actionKeys.forEach(key => {
+                actionAnalysis[key] = action[key];
+            });
+            
+            // console.log('魔法アクションデバッグ:', {
+            //     'action全体': action,
+            //     'actionのキー': actionKeys,
+            //     'action.params': action.params,
+            //     'paramsのキー': action.params ? Object.keys(action.params) : 'paramsなし',
+            //     'params詳細': action.params,
+            //     'params.itemId': action.params?.itemId,
+            //     'params.spellId': action.params?.spellId,
+            //     'params.id': action.params?.id,
+            //     actionType: action.type,
+            //     spellId: action.spellId,
+            //     itemId: action.itemId,
+            //     magicId: magicId,
+            //     spellData: spellData,
+            //     spellType: spellData?.type
+            // });
+            
+            const message = this.messageManager.buildMagicMessage(
+                result,
+                action.actor.name,
+                spellData.name
+            );
+            this.showMessageAndWait(message);
             
             // 効果を適用（回復、MP消費等）
             if (result.effects && result.effects.length > 0) {
@@ -364,8 +399,16 @@ class TurnBasedBattleRule extends BattleRuleBase {
         // console.log('アイテムアクション結果:', result);
         
         if (result.success) {
-            // メッセージを表示
-            this.showMessageAndWait(result.message);
+            // MessageManagerを使用してメッセージを構築
+            const inventoriesArray = Array.isArray(this.inventories) ? this.inventories : Object.values(this.inventories);
+            const itemData = inventoriesArray.find(item => item.id === action.itemId);
+            const message = this.messageManager.buildItemMessage(
+                result,
+                action.actor.name,
+                itemData ? itemData.name : action.itemId,
+                itemData
+            );
+            this.showMessageAndWait(message);
             
             // 効果を適用（回復効果など）
             if (result.effects && result.effects.length > 0) {

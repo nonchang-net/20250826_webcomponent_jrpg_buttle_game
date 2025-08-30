@@ -162,6 +162,16 @@ class MessageDisplay extends HTMLElement {
      * @returns {Promise} - 表示完了を示すPromise
      */
     async showMessage(message, immediate = false) {
+        // メッセージが未定義または空の場合の処理
+        if (!message || typeof message !== 'string') {
+            console.error('message-display.js: 無効なメッセージが渡されました:', {
+                message: message,
+                type: typeof message,
+                immediate: immediate
+            });
+            message = '';
+        }
+        
         if (immediate) {
             this.displayMessageImmediate(message);
             return Promise.resolve();
@@ -177,6 +187,15 @@ class MessageDisplay extends HTMLElement {
      */
     displayMessageWithTypewriter(message) {
         return new Promise((resolve) => {
+            // メッセージの安全性チェック
+            if (!message || typeof message !== 'string') {
+                console.error('message-display.js: displayMessageWithTypewriterに無効なメッセージが渡されました:', {
+                    message: message,
+                    type: typeof message
+                });
+                message = '';
+            }
+            
             const messageElement = this.querySelector('#message-content');
             const continueIndicator = this.querySelector('#continue-indicator');
             
@@ -215,6 +234,15 @@ class MessageDisplay extends HTMLElement {
      * @param {string} message - 表示するメッセージ
      */
     displayMessageImmediate(message) {
+        // メッセージの安全性チェック
+        if (!message || typeof message !== 'string') {
+            console.error('message-display.js: displayMessageImmediateに無効なメッセージが渡されました:', {
+                message: message,
+                type: typeof message
+            });
+            message = '';
+        }
+        
         const messageElement = this.querySelector('#message-content');
         const continueIndicator = this.querySelector('#continue-indicator');
         
