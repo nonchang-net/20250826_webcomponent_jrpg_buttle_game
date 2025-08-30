@@ -204,32 +204,8 @@ class ActionResolver {
             };
         }
 
-        // 回復効果の詳細メッセージを作成
-        let detailedMessage = `${caster.name}は${spellData.name}を唱えた。`;
-        const healEffects = (result.effects || []).filter(effect => 
-            effect.type === 'magic_heal' || effect.type === 'heal'
-        );
-        
-        if (healEffects.length > 0) {
-            const healEffect = healEffects[0];
-            if (healEffect.target) {
-                // 実際の回復量を計算するため、現在のHPと最大HPを確認
-                const currentHp = healEffect.target.currentHp;
-                const maxHp = healEffect.target.maxHp;
-                const healAmount = healEffect.baseHeal || healEffect.amount || 0;
-                const actualHeal = Math.min(healAmount, maxHp - currentHp);
-                
-                if (actualHeal > 0) {
-                    detailedMessage += `${healEffect.target.name}のHPが${actualHeal}ポイント回復した！`;
-                } else {
-                    detailedMessage += `しかし効果はなかった！`;
-                }
-            }
-        }
-
         return {
             success: true,
-            message: detailedMessage,
             effects: result.effects || [],
             actionData: {
                 type: 'magic',
@@ -291,32 +267,8 @@ class ActionResolver {
 
         // アイテム消費はマクロコマンド内の「消費型アイテム評価」で実行されるため、ここでは実行しない
 
-        // 回復効果の詳細メッセージを作成
-        let detailedMessage = `${user.name}は${itemData.name}を使った。`;
-        const healEffects = (result.effects || []).filter(effect => 
-            effect.type === 'item_heal' || effect.type === 'heal'
-        );
-        
-        if (healEffects.length > 0) {
-            const healEffect = healEffects[0];
-            if (healEffect.target) {
-                // 実際の回復量を計算するため、現在のHPと最大HPを確認
-                const currentHp = healEffect.target.currentHp;
-                const maxHp = healEffect.target.maxHp;
-                const healAmount = healEffect.baseHeal || healEffect.amount || 0;
-                const actualHeal = Math.min(healAmount, maxHp - currentHp);
-                
-                if (actualHeal > 0) {
-                    detailedMessage += `${healEffect.target.name}のHPが${actualHeal}ポイント回復した！`;
-                } else {
-                    detailedMessage += `しかし効果はなかった！`;
-                }
-            }
-        }
-
         return {
             success: true,
-            message: detailedMessage,
             effects: result.effects || [],
             damage: result.damage || 0
         };

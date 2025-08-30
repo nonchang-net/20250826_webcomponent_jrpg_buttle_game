@@ -210,15 +210,64 @@ class MessageManager {
      * @returns {string} 魔法メッセージ
      */
     buildMagicMessage(actionResult, casterName, spellName) {
-        const messages = [`${casterName}は${spellName}を唱えた！`];
-        
-        // 効果メッセージを追加
-        const effectMessages = this.buildMessageFromEffects(actionResult.effects);
-        if (effectMessages) {
-            messages.push(effectMessages);
+        const messages = [`${casterName}は${spellName}を唱えた。`];
+        this.buildMessagesWithHealEffects(messages, actionResult, ['magic_heal', 'heal']);
+        return messages.join('');
+    }
+
+    /**
+     * 回復効果の詳細メッセージを構築する（効果の有無を考慮）
+     * @param {Object} healEffect - 回復効果
+     * @returns {string} 回復効果メッセージ
+     */
+    buildHealEffectMessage(healEffect) {
+        if (!healEffect.target) {
+            return '';
         }
         
-        return messages.join('\n');
+        // 実際の回復量を計算するため、現在のHPと最大HPを確認
+        const currentHp = healEffect.target.currentHp;
+        const maxHp = healEffect.target.maxHp;
+        const healAmount = healEffect.baseHeal || healEffect.amount || 0;
+        const actualHeal = Math.min(healAmount, maxHp - currentHp);
+        
+        if (actualHeal > 0) {
+            return `${healEffect.target.name}のHPが${actualHeal}ポイント回復した！`;
+        } else {
+            return 'しかし効果はなかった！';
+        }
+    }
+
+    /**
+     * 回復効果を含むアクションのメッセージを構築する（共通処理）
+     * @param {Array} messages - メッセージ配列
+     * @param {Object} actionResult - アクション実行結果
+     * @param {Array} healEffectTypes - 対象とする回復効果タイプ
+     * @returns {Array} メッセージ配列
+     */
+    buildMessagesWithHealEffects(messages, actionResult, healEffectTypes) {
+        const healEffects = (actionResult.effects || []).filter(effect => 
+            healEffectTypes.includes(effect.type)
+        );
+        
+        if (healEffects.length > 0) {
+            healEffects.forEach(healEffect => {
+                if (healEffect.target) {
+                    const healMessage = this.buildHealEffectMessage(healEffect);
+                    if (healMessage) {
+                        messages.push(healMessage);
+                    }
+                }
+            });
+        } else {
+            // 回復効果以外の効果メッセージを追加
+            const effectMessages = this.buildMessageFromEffects(actionResult.effects);
+            if (effectMessages) {
+                messages.push(effectMessages);
+            }
+        }
+        
+        return messages;
     }
 
     /**
@@ -236,15 +285,9 @@ class MessageManager {
             return `${userName}は${itemName}を掲げた。しかし何も起こらなかった！`;
         }
         
-        const messages = [`${userName}は${itemName}を使った！`];
-        
-        // 効果メッセージを追加
-        const effectMessages = this.buildMessageFromEffects(actionResult.effects);
-        if (effectMessages) {
-            messages.push(effectMessages);
-        }
-        
-        return messages.join('\n');
+        const messages = [`${userName}は${itemName}を使った。`];
+        this.buildMessagesWithHealEffects(messages, actionResult, ['item_heal', 'heal']);
+        return messages.join('');
     }
 
     /**
