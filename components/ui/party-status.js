@@ -17,27 +17,35 @@ class PartyStatus extends HTMLElement {
         this.innerHTML = `
             <style>
                 :host {
-                    flex: 2;
-                    padding: 15px;
                     display: flex;
                     flex-direction: column;
-                    gap: 8px;
+                    gap: 6px;
                     background: rgba(0,0,0,0.2);
+                    padding: 8px;
+                    border-radius: 8px;
                     overflow-y: auto;
+                }
+
+                .party-member-commentout{
+                    justify-content: space-between;
+                    border : 5px solid red;
+                }
+
+                #party-container {
                 }
 
                 .party-member {
                     display: flex;
-                    justify-content: space-between;
-                    align-items: center;
+                    align-items: flex-start;
                     background: rgba(255, 255, 255, 0.1);
-                    padding: 6px 12px;
+                    padding: 8px 12px;
                     border-radius: 5px;
-                    margin : 10px;
+                    margin : 6px;
+                    width : calc( 100% - 40px);
+                    height : calc( 100% - 12px);
                     color: white;
                     border-left: 4px solid #4CAF50;
                     transition: all 0.3s ease;
-                    min-height: 60px;
                     flex-shrink: 0;
                 }
 
@@ -66,12 +74,13 @@ class PartyStatus extends HTMLElement {
                 .member-info {
                     display: flex;
                     flex-direction: column;
-                    gap: 2px;
+                    gap: 3px;
+                    flex-shrink: 0;
                 }
 
                 .member-name {
                     font-weight: bold;
-                    min-width: 70px;
+                    min-width: 40px;
                     font-size: 14px;
                 }
 
@@ -82,8 +91,10 @@ class PartyStatus extends HTMLElement {
 
                 .member-stats {
                     display: flex;
-                    gap: 15px;
+                    flex-direction: column;
+                    gap: 3px;
                     font-size: 13px;
+                    flex-shrink: 0;
                 }
 
                 .stat {
@@ -98,7 +109,7 @@ class PartyStatus extends HTMLElement {
                 }
 
                 .hp-bar, .mp-bar {
-                    width: 50px;
+                    width: 60px;
                     height: 6px;
                     background: rgba(0,0,0,0.5);
                     border-radius: 3px;
@@ -218,8 +229,6 @@ class PartyStatus extends HTMLElement {
             memberElement.innerHTML = `
                 <div class="member-info">
                     <div class="member-name">${member.name}</div>
-                    <div class="member-level">Lv.${member.level}</div>
-                    <div class="equipment-info">${equipmentText}</div>
                     ${statusEffectsHtml}
                 </div>
                 <div class="member-stats">

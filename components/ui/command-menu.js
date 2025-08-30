@@ -31,13 +31,13 @@ class CommandMenu extends HTMLElement {
         this.innerHTML = `
             <style>
                 :host {
-                    flex: 1;
-                    padding: 15px;
-                    background: rgba(0,0,0,0.3);
-                    border-left: 2px solid #444;
                     display: flex;
                     flex-direction: column;
-                    min-width: 200px;
+                    background: rgba(0,0,0,0.3);
+                    border-radius: 8px;
+                    padding: 12px;
+                    border: 1px solid #444;
+                    min-height: 120px;
                 }
 
                 .menu-title {
@@ -78,9 +78,10 @@ class CommandMenu extends HTMLElement {
                     justify-content: flex-start;
                     padding: 6px 12px;
                     min-height: 28px;
-                    width: 100%;
+                    width: 90%;
                     box-sizing: border-box;
                     position: relative;
+                    margin : 0 10px;
                 }
 
                 .command-button.selected {

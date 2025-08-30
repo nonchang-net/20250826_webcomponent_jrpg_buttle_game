@@ -38,42 +38,52 @@ class BattleSceneDisplay {
                     flex-direction: column;
                 }
 
-                .enemy-area {
-                    flex: 1;
-                }
-
-                .ui-area {
-                    height: 250px;
-                    background: linear-gradient(180deg, #1a1a1a 0%, #333333 100%);
-                    border-top: 3px solid #FFD700;
+                .status-area {
                     display: flex;
-                    justify-content: space-between;
-                    position: relative;
+                    flex: 1;
+                    gap: 8px;
+                    padding: 8px;
                 }
 
-                #command-menu {
-                    margin : 15px;
-                    display: none;
+                #enemy-display {
+                    flex: 1;
+                    max-height: 60vh;
+                    overflow-y: auto;
                 }
 
                 #party-status {
-                    margin-left: auto;
-                    margin-right: 15px;
+                    flex: 2;
+                    max-height: 60vh;
+                    overflow-y: auto;
+                }
+
+                .bottom-area {
+                    display: flex;
+                    gap: 8px;
+                    padding: 8px;
+                    flex-shrink: 0;
+                }
+
+                #message-display {
+                    flex: 2;
+                }
+
+                #command-menu {
+                    flex: 1;
+                    display: none;
                 }
 
             </style>
             
             <div class="battle-field">
-                <div class="enemy-area">
+                <div class="status-area">
                     <enemy-display id="enemy-display"></enemy-display>
-                </div>
-                
-                <div class="ui-area">
-                    <command-menu id="command-menu"></command-menu>
                     <party-status id="party-status"></party-status>
                 </div>
-                
-                <message-display id="message-display"></message-display>
+                <div class="bottom-area">
+                    <message-display id="message-display"></message-display>
+                    <command-menu id="command-menu"></command-menu>
+                </div>
             </div>
         `;
     }

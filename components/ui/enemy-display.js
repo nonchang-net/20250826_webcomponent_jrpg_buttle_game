@@ -17,47 +17,65 @@ class EnemyDisplay extends HTMLElement {
             <style>
                 :host {
                     display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    padding: 50px;
-                    flex: 1;
+                    width: 100%;
+                    height: 100%;
+                    padding: 8px;
+                    overflow: hidden;
                 }
 
                 .enemy-container {
                     display: flex;
-                    flex-wrap: wrap;
-                    gap: 30px;
-                    justify-content: center;
-                    padding : 2em;
+                    flex-direction: column;
+                    gap: 6px;
+                    width: calc(100% - 20px);
+                    height: calc(100% - 12px);
+                    background: rgba(0,0,0,0.2);
+                    border-radius: 8px;
+                    padding: 6px;
+                    overflow-y: auto;
                 }
 
                 .enemy {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 4px;
                     background: rgba(255, 255, 255, 0.1);
-                    border: 2px solid #FFD700;
-                    border-radius: 10px;
-                    padding: 20px;
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    border-radius: 6px;
+                    padding: 8px 10px;
                     color: white;
-                    text-align: center;
-                    min-width: 120px;
-                    backdrop-filter: blur(5px);
-                    transition: all 0.3s ease;
+                    border-left: 4px solid #FF6B6B;
+                    flex-shrink: 0;
+                    min-height: 60px;
+                }
+
+                .enemy-info {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 2px;
                 }
 
                 .enemy-name {
-                    font-size: 18px;
-                    font-weight: bold;
-                    margin-bottom: 10px;
-                }
-
-                .enemy-hp {
                     font-size: 14px;
-                    color: #90EE90;
+                    font-weight: bold;
                 }
 
                 .enemy-status {
-                    font-size: 12px;
+                    font-size: 11px;
                     color: #FFD700;
-                    margin-top: 5px;
+                }
+
+                .enemy-stats {
+                    display: flex;
+                    flex-direction: row;
+                    gap: 8px;
+                    align-items: center;
+                    justify-content: flex-start;
+                }
+
+                .enemy-hp {
+                    font-size: 12px;
+                    color: #90EE90;
                 }
 
                 @keyframes damage {
@@ -72,9 +90,10 @@ class EnemyDisplay extends HTMLElement {
                 }
 
                 .defeated {
-                    opacity: 0.5;
+                    opacity: 0.6;
                     filter: grayscale(100%);
                     pointer-events: none;
+                    border-left-color: #666;
                 }
 
             </style>
@@ -109,8 +128,10 @@ class EnemyDisplay extends HTMLElement {
             
             enemyElement.innerHTML = `
                 <div class="enemy-name">${enemy.name}</div>
-                <div class="enemy-hp">HP: ${enemy.currentHp}/${enemy.maxHp}</div>
-                ${enemy.status ? `<div class="enemy-status">${enemy.status}</div>` : ''}
+                <div class="enemy-stats">
+                    <div class="enemy-hp">HP: ${enemy.currentHp}/${enemy.maxHp}</div>
+                    ${enemy.status ? `<div class="enemy-status">${enemy.status}</div>` : ''}
+                </div>
             `;
             
             // 敵が倒されている場合のスタイル適用

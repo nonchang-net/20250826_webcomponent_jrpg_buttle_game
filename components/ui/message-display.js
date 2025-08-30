@@ -23,35 +23,37 @@ class MessageDisplay extends HTMLElement {
             <style>
                 :host {
                     display: block;
-                    height: 80px;
+                    height: auto;
                     background: linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%);
-                    border-top: 3px solid #FFD700;
-                    border-bottom: 2px solid #666;
+                    border: 3px solid #FFD700;
+                    border-radius: 8px;
                     position: relative;
                     overflow: hidden;
                 }
 
                 .message-container {
-                    width: 90%;
-                    height: 100%;
+                    width: calc(100% - 50px);
+                    height: auto;
                     display: flex;
-                    align-items: center;
+                    align-items: flex-start;
                     padding: 10px;
                     position: relative;
-                    margin-top : 1em;
-                    border : 5px solid #FFF;
-                    border-radius : 10px;
+                    margin: 10px;
+                    border: 2px solid #FFF;
+                    border-radius: 8px;
+                    min-height: 60px;
                 }
 
                 .message-content {
                     color: white;
-                    font-size: 16px;
+                    font-size: 14px;
                     font-weight: bold;
                     font-family: 'MS UI Gothic', 'Hiragino Kaku Gothic Pro', sans-serif;
-                    line-height: 1.4;
+                    line-height: 1.5;
                     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
                     flex: 1;
                     word-wrap: break-word;
+                    padding-top: 8px;
                 }
 
                 .message-cursor {
