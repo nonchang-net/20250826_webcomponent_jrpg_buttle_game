@@ -225,8 +225,7 @@ class BattleFlowController {
             .map(inventory => {
                 const spellData = this.inventories[inventory.inventory_id];
                 if (spellData && spellData.type === 'magic') {
-                    const mpCost = this.actionResolver.getMagicMpCost ? 
-                        this.actionResolver.getMagicMpCost(spellData) : 5;
+                    const mpCost = this.actionResolver.getMagicMpCost(spellData);
                     
                     return {
                         id: inventory.inventory_id,

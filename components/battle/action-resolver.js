@@ -275,6 +275,60 @@ class ActionResolver {
 
 
     /**
+     * 魔法のMP消費量を取得する
+     * @param {Object} spellData - 魔法データ（inventoriesから取得）
+     * @returns {number} MP消費量
+     */
+    getMagicMpCost(spellData) {
+        if (!spellData || !spellData.commands || spellData.commands.length === 0) {
+            return 0;
+        }
+
+        // 魔法の最初のコマンドを取得（通常は魔法マクロ）
+        const firstCommand = spellData.commands[0];
+        if (!firstCommand || !firstCommand.command_id) {
+            return 0;
+        }
+
+        // コマンドIDからマクロデータを取得
+        const macroData = this.commandsData[firstCommand.command_id];
+        if (!macroData || !macroData.sub_commands) {
+            return 0;
+        }
+
+        // マクロのサブコマンドから「MP評価」コマンドを探す
+        const mpEvaluationCommand = macroData.sub_commands.find(subCmd => 
+            this.commandsData[subCmd.command_id] && 
+            this.commandsData[subCmd.command_id].name === 'MP評価'
+        );
+
+        if (mpEvaluationCommand && mpEvaluationCommand.arg) {
+            // MP評価コマンドが参照するarg値を取得
+            const argValue = this.resolveArgumentValue(firstCommand, mpEvaluationCommand.arg);
+            return parseInt(argValue) || 0;
+        }
+
+        return 0;
+    }
+
+    /**
+     * 引数値を解決する
+     * @param {Object} parentCommand - 親コマンド
+     * @param {string} argSpec - 引数指定（"arg1", "arg2", "arg3"）
+     * @returns {*} 解決された引数値
+     */
+    resolveArgumentValue(parentCommand, argSpec) {
+        if (!argSpec) return null;
+        
+        if (argSpec === 'arg1') return parentCommand.arg1;
+        if (argSpec === 'arg2') return parentCommand.arg2;
+        if (argSpec === 'arg3') return parentCommand.arg3;
+        
+        // 直接値の場合はそのまま返す
+        return argSpec;
+    }
+
+    /**
      * 敵のアクションを実行する
      * @param {Object} action - 敵のアクション
      * @returns {Object} 実行結果
