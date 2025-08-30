@@ -333,13 +333,8 @@ class TurnBasedBattleRule extends BattleRuleBase {
         const result = this.actionResolver.resolveAction(action);
         
         if (result.success) {
-            // MessageManagerで統一的にメッセージを構築
-            const magicMessage = this.messageManager.buildMagicMessage(
-                result,
-                action.actor.name, 
-                action.params.spellId
-            );
-            this.showMessageAndWait(magicMessage);
+            // ActionResolverで作成されたメッセージを使用
+            this.showMessageAndWait(result.message);
             
             // 効果を適用（回復、MP消費等）
             if (result.effects && result.effects.length > 0) {
@@ -411,6 +406,7 @@ class TurnBasedBattleRule extends BattleRuleBase {
             switch (effect.type) {
                 case 'heal':
                 case 'item_heal':
+                case 'magic_heal':
                     if (effect.target) {
                         // effect.targetの型とhealメソッドの存在を確認
                         // console.log('回復効果対象:', { 

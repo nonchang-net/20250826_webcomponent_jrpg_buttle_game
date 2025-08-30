@@ -265,7 +265,7 @@ class BattleScene extends HTMLElement {
                 
                 if (needsTargetSelection) {
                     // ターゲット選択が必要な場合
-                    const targetType = this.getItemTargetType(itemId);
+                    const targetType = this.getInventoryTargetType(itemId);
                     await this.showTargetSelection(itemId, targetType, 'item');
                 } else {
                     // ターゲット選択が不要な場合（全体効果など）
@@ -289,13 +289,21 @@ class BattleScene extends HTMLElement {
             const currentPlayer = this.battleFlowController ? this.battleFlowController.getCurrentPlayer() : null;
             
             if (this.battleFlowController && currentPlayer) {
-                // 行動確定時にコマンドメニューを即座に非表示
-                if (this.display && this.display.commandMenu) {
-                    this.display.setCommandMenuVisibility(false);
-                }
+                // 魔法のターゲット選択が必要かチェック
+                const needsTargetSelection = this.checkIfMagicNeedsTargetSelection(spellId);
                 
-                // 魔法行動をBattleFlowControllerに設定
-                await this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
+                if (needsTargetSelection) {
+                    // ターゲット選択が必要な場合
+                    const targetType = this.getInventoryTargetType(spellId);
+                    await this.showTargetSelection(spellId, targetType, 'magic');
+                } else {
+                    // ターゲット選択が不要な場合
+                    if (this.display && this.display.commandMenu) {
+                        this.display.setCommandMenuVisibility(false);
+                    }
+                    
+                    await this.battleFlowController.setPlayerAction(currentPlayer, 'magic', currentPlayer, { spellId: spellId });
+                }
             }
         });
 
@@ -384,21 +392,22 @@ class BattleScene extends HTMLElement {
     }
 
     /**
-     * アイテムがターゲット選択を必要とするかチェックする
-     * @param {string} itemId - アイテムID
+     * インベントリアイテムがターゲット選択を必要とするかチェックする（共通処理）
+     * @param {string} inventoryId - インベントリID（アイテム、魔法、スキルなど）
+     * @param {string} itemType - アイテムタイプ（'item', 'magic', 'skill'等、エラーメッセージ用）
      * @returns {boolean} ターゲット選択が必要かどうか
      */
-    checkIfItemNeedsTargetSelection(itemId) {
+    checkIfInventoryNeedsTargetSelection(inventoryId, itemType = 'アイテム') {
         const battleRule = this.battleFlowController?.currentBattleRule;
         const inventoriesDatabase = battleRule?.inventoriesDatabase;
         
-        if (!inventoriesDatabase || !inventoriesDatabase[itemId]) {
-            console.error('アイテムデータが見つからない');
+        if (!inventoriesDatabase || !inventoriesDatabase[inventoryId]) {
+            console.error(`${itemType}データが見つからない:`, inventoryId);
             return false;
         }
 
-        const itemData = inventoriesDatabase[itemId];
-        const commands = itemData.commands || [];
+        const inventoryData = inventoriesDatabase[inventoryId];
+        const commands = inventoryData.commands || [];
 
         for (const command of commands) {
             const commandsDatabase = battleRule?.commandsDatabase;
@@ -407,7 +416,7 @@ class BattleScene extends HTMLElement {
                 const commandData = commandsDatabase[command.command_id];
                 const subCommands = commandData.sub_commands || [];
                 
-                // 全体ターゲット設定コマンドがあるかチェック
+                // 全体ターゲット設定コマンドがあるかチェック（アイテムのみ）
                 const hasWholeTarget = subCommands.some(subCmd => 
                     subCmd.command_id === '23ca1336-358d-461b-8e74-20beebe59f98'
                 );
@@ -434,19 +443,19 @@ class BattleScene extends HTMLElement {
     }
 
     /**
-     * アイテムのターゲットタイプを取得する
-     * @param {string} itemId - アイテムID
+     * インベントリアイテムのターゲットタイプを取得する（共通処理）
+     * @param {string} inventoryId - インベントリID（アイテム、魔法、スキルなど）
      * @returns {string} 'friend' または 'enemy'
      */
-    getItemTargetType(itemId) {
+    getInventoryTargetType(inventoryId) {
         const battleRule = this.battleFlowController?.currentBattleRule;
         const inventoriesDatabase = battleRule?.inventoriesDatabase;
-        if (!inventoriesDatabase || !inventoriesDatabase[itemId]) {
+        if (!inventoriesDatabase || !inventoriesDatabase[inventoryId]) {
             return 'friend';
         }
 
-        const itemData = inventoriesDatabase[itemId];
-        const commands = itemData.commands || [];
+        const inventoryData = inventoriesDatabase[inventoryId];
+        const commands = inventoryData.commands || [];
 
         for (const command of commands) {
             const commandsDatabase = battleRule?.commandsDatabase;
@@ -475,6 +484,24 @@ class BattleScene extends HTMLElement {
         }
         
         return 'friend'; // デフォルトは味方
+    }
+
+    /**
+     * アイテムがターゲット選択を必要とするかチェックする
+     * @param {string} itemId - アイテムID
+     * @returns {boolean} ターゲット選択が必要かどうか
+     */
+    checkIfItemNeedsTargetSelection(itemId) {
+        return this.checkIfInventoryNeedsTargetSelection(itemId, 'アイテム');
+    }
+
+    /**
+     * 魔法がターゲット選択を必要とするかチェックする
+     * @param {string} spellId - 魔法ID
+     * @returns {boolean} ターゲット選択が必要かどうか
+     */
+    checkIfMagicNeedsTargetSelection(spellId) {
+        return this.checkIfInventoryNeedsTargetSelection(spellId, '魔法');
     }
 
     /**

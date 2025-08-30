@@ -169,7 +169,6 @@ class ActionResolver {
 
     /**
      * 魔法行動を実行する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
      * @param {Object} action - 魔法行動
      * @returns {Object} 実行結果
      */
@@ -194,107 +193,53 @@ class ActionResolver {
             };
         }
 
-        // MP消費チェック
-        const mpCost = this.getMagicMpCost(spellData);
-        if (caster.currentMp < mpCost) {
+        // CommandEvaluatorを使って魔法のコマンドを実行
+        const result = this.commandEvaluator.evaluateCommands(caster, spellId, action.target);
+        
+        if (!result.success) {
             return {
                 success: false,
-                message: this.messageManager.buildErrorMessage('mp_insufficient', { caster: caster }),
+                message: result.message || `${caster.name}は${spellData.name}を唱えようとしたが失敗した！`,
                 effects: []
             };
         }
 
-        // MP消費
-        caster.currentMp -= mpCost;
-
-        // 魔法効果を解決
-        return this.resolveMagicEffect(caster, action.target, spellData);
-    }
-
-    /**
-     * 魔法効果を解決する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
-     * @param {Object} caster - 術者
-     * @param {Object} target - 対象
-     * @param {Object} spellData - 魔法データ
-     * @returns {Object} 実行結果
-     */
-    resolveMagicEffect(caster, target, spellData) {
-        const effects = [];
+        // 回復効果の詳細メッセージを作成
+        let detailedMessage = `${caster.name}は${spellData.name}を唱えた。`;
+        const healEffects = (result.effects || []).filter(effect => 
+            effect.type === 'magic_heal' || effect.type === 'heal'
+        );
         
-        // 回復魔法の場合
-        if (spellData.name.includes('回復')) {
-            const healAmount = this.calculateHealAmount(caster, spellData);
-            const previousHp = target.currentHp;
-            target.currentHp = Math.min(target.maxHp, target.currentHp + healAmount);
-            const actualHeal = target.currentHp - previousHp;
-
-            effects.push({
-                type: 'heal',
-                target: target,
-                amount: actualHeal,
-                previousHp: previousHp,
-                newHp: target.currentHp
-            });
-
-            return {
-                success: true,
-                effects: effects,
-                actionData: {
-                    type: 'magic',
-                    caster: caster,
-                    spell: spellData,
-                    target: target
+        if (healEffects.length > 0) {
+            const healEffect = healEffects[0];
+            if (healEffect.target) {
+                // 実際の回復量を計算するため、現在のHPと最大HPを確認
+                const currentHp = healEffect.target.currentHp;
+                const maxHp = healEffect.target.maxHp;
+                const healAmount = healEffect.baseHeal || healEffect.amount || 0;
+                const actualHeal = Math.min(healAmount, maxHp - currentHp);
+                
+                if (actualHeal > 0) {
+                    detailedMessage += `${healEffect.target.name}のHPが${actualHeal}ポイント回復した！`;
+                } else {
+                    detailedMessage += `しかし効果はなかった！`;
                 }
-            };
-        }
-        
-        // 攻撃魔法の場合
-        if (spellData.name.includes('攻撃') || spellData.name.includes('火') || spellData.name.includes('氷')) {
-            const damage = this.calculateMagicDamage(caster, target, spellData);
-            const previousHp = target.currentHp;
-            target.currentHp = Math.max(0, target.currentHp - damage);
-            const actualDamage = previousHp - target.currentHp;
-
-            effects.push({
-                type: 'magic_damage',
-                target: target,
-                amount: actualDamage,
-                previousHp: previousHp,
-                newHp: target.currentHp
-            });
-
-            if (target.currentHp <= 0) {
-                effects.push({
-                    type: 'defeat',
-                    target: target
-                });
             }
-
-            return {
-                success: true,
-                effects: effects,
-                actionData: {
-                    type: 'magic',
-                    caster: caster,
-                    spell: spellData,
-                    target: target
-                }
-            };
         }
 
-        // その他の魔法
         return {
             success: true,
-            effects: effects,
+            message: detailedMessage,
+            effects: result.effects || [],
             actionData: {
                 type: 'magic',
                 caster: caster,
                 spell: spellData,
-                target: target
+                target: action.target
             }
         };
     }
+
 
     /**
      * アイテム使用行動を実行する
@@ -346,115 +291,38 @@ class ActionResolver {
 
         // アイテム消費はマクロコマンド内の「消費型アイテム評価」で実行されるため、ここでは実行しない
 
+        // 回復効果の詳細メッセージを作成
+        let detailedMessage = `${user.name}は${itemData.name}を使った。`;
+        const healEffects = (result.effects || []).filter(effect => 
+            effect.type === 'item_heal' || effect.type === 'heal'
+        );
+        
+        if (healEffects.length > 0) {
+            const healEffect = healEffects[0];
+            if (healEffect.target) {
+                // 実際の回復量を計算するため、現在のHPと最大HPを確認
+                const currentHp = healEffect.target.currentHp;
+                const maxHp = healEffect.target.maxHp;
+                const healAmount = healEffect.baseHeal || healEffect.amount || 0;
+                const actualHeal = Math.min(healAmount, maxHp - currentHp);
+                
+                if (actualHeal > 0) {
+                    detailedMessage += `${healEffect.target.name}のHPが${actualHeal}ポイント回復した！`;
+                } else {
+                    detailedMessage += `しかし効果はなかった！`;
+                }
+            }
+        }
+
         return {
             success: true,
-            message: `${user.name}は${itemData.name}を使用した！`,
+            message: detailedMessage,
             effects: result.effects || [],
             damage: result.damage || 0
         };
     }
 
-    /**
-     * アイテム効果を解決する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義するが、メッセージ構築については専用のメッセージコマンドを追加する必要がありそう
-     * @param {Object} user - 使用者
-     * @param {Object} target - 対象
-     * @param {Object} itemData - アイテムデータ
-     * @returns {Object} 実行結果
-     */
-    resolveItemEffect(user, target, itemData) {
-        const effects = [];
-        
-        // 回復アイテムの場合
-        if (itemData.name.includes('薬') || itemData.name.includes('回復')) {
-            const healAmount = this.calculateItemHealAmount(itemData);
-            const previousHp = target.currentHp;
-            target.currentHp = Math.min(target.maxHp, target.currentHp + healAmount);
-            const actualHeal = target.currentHp - previousHp;
 
-            effects.push({
-                type: 'item_heal',
-                target: target,
-                amount: actualHeal,
-                previousHp: previousHp,
-                newHp: target.currentHp
-            });
-
-            return {
-                success: true,
-                effects: effects,
-                actionData: {
-                    type: 'item',
-                    user: user,
-                    item: itemData,
-                    target: target
-                }
-            };
-        }
-
-        return {
-            success: true,
-            effects: effects,
-            actionData: {
-                type: 'item',
-                user: user,
-                item: itemData,
-                target: target
-            }
-        };
-    }
-
-    /**
-     * 魔法のMP消費量を取得する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
-     * @param {Object} spellData - 魔法データ
-     * @returns {number} MP消費量
-     */
-    getMagicMpCost(spellData) {
-        if (spellData.name.includes('回復')) {
-            return spellData.name.includes('小') ? 3 : spellData.name.includes('大') ? 10 : 5;
-        }
-        return 5; // デフォルト
-    }
-
-    /**
-     * 回復量を計算する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
-     * @param {Object} _caster - 術者（将来拡張用）
-     * @param {Object} spellData - 魔法データ
-     * @returns {number} 回復量
-     */
-    calculateHealAmount(_caster, spellData) {
-        const baseHeal = spellData.name.includes('小') ? 25 : spellData.name.includes('大') ? 80 : 50;
-        const random = Math.floor(Math.random() * 10) - 5; // -5から+4の乱数
-        return Math.max(1, baseHeal + random);
-    }
-
-    /**
-     * 魔法ダメージを計算する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
-     * @param {Object} _caster - 術者（将来拡張用）
-     * @param {Object} _target - 対象（将来拡張用）
-     * @param {Object} _spellData - 魔法データ（将来拡張用）
-     * @returns {number} ダメージ量
-     */
-    calculateMagicDamage(_caster, _target, _spellData) {
-        const baseDamage = 30;
-        const random = Math.floor(Math.random() * 20); // 0-19の乱数
-        return Math.max(1, baseDamage + random);
-    }
-
-    /**
-     * アイテム回復量を計算する
-     * TODO: 削除予定。汎用コマンドマスターとinventoriesマスターで定義する
-     * @param {Object} itemData - アイテムデータ
-     * @returns {number} 回復量
-     */
-    calculateItemHealAmount(itemData) {
-        if (itemData.name.includes('薬草')) return 30;
-        if (itemData.name.includes('特薬')) return 100;
-        return 20; // デフォルト
-    }
 
     /**
      * 敵のアクションを実行する
